@@ -1,42 +1,33 @@
-import amqp from "amqplib";
-import dotenv from "dotenv";
+import { RabbitMQService } from "./services/rabbitmq";
+import { logger } from "./services/logger";
+import { config } from "./config";
 import { processMessage } from "./services/messageProcessor";
 
-dotenv.config();
-
-const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://localhost";
-const QUEUE_NAME = process.env.QUEUE_NAME || "expense_queue";
-
 async function startConsumer() {
+  const rabbitmq = new RabbitMQService();
+
   try {
-    const connection = await amqp.connect(RABBITMQ_URL);
-    const channel = await connection.createChannel();
+    await rabbitmq.connect();
+    logger.info("Connected to RabbitMQ");
 
-    await channel.assertQueue(QUEUE_NAME, {
-      durable: true,
-    });
-
-    console.log(
-      `[*] Waiting for messages in ${QUEUE_NAME}. To exit press CTRL+C`
-    );
-
-    channel.consume(QUEUE_NAME, async (msg) => {
-      if (msg) {
-        try {
-          const content = msg.content.toString();
-          console.log(`[x] Received ${content}`);
-
-          await processMessage(content);
-          channel.ack(msg);
-        } catch (error) {
-          console.error("Error processing message:", error);
-          // Reject the message and requeue it
-          channel.nack(msg, false, true);
-        }
+    await rabbitmq.consume(async (message) => {
+      try {
+        await processMessage(message);
+        logger.info("Message processed successfully");
+      } catch (error) {
+        logger.error("Error processing message:", error);
+        throw error;
       }
     });
+
+    // Handle graceful shutdown
+    process.on("SIGINT", async () => {
+      logger.info("Shutting down...");
+      await rabbitmq.close();
+      process.exit(0);
+    });
   } catch (error) {
-    console.error("Error starting consumer:", error);
+    logger.error("Failed to start consumer:", error);
     process.exit(1);
   }
 }
