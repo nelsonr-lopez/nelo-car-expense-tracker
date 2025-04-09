@@ -1,0 +1,26 @@
+name: cab-expense-processor
+version: 0.1.0.0
+description: Data processing and validation for Cab Expense Tracker
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - time
+  - text
+  - bytestring
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Models
+    - Processing
+    - Processor
+
+tests:
+  cab-expense-processor-test:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+      - cab-expense-processor
+      - hspec
+      - QuickCheck

@@ -1,0 +1,131 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Expenses">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Expenses</h1>
+      <a
+        href="/add-expense"
+        class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        Add Expense
+      </a>
+    </div>
+
+    <div class="rounded-lg border">
+      <div class="p-4">
+        <div class="flex items-center space-x-4">
+          <input
+            type="text"
+            placeholder="Search expenses..."
+            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+          />
+          <select
+            class="h-10 rounded-md border border-input bg-background px-3 py-2"
+          >
+            <option value="">All Categories</option>
+            <option value="fuel">Fuel</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="insurance">Insurance</option>
+            <option value="other">Other</option>
+          </select>
+          <select
+            class="h-10 rounded-md border border-input bg-background px-3 py-2"
+          >
+            <option value="">All Vehicles</option>
+            <option value="123">Vehicle #123</option>
+            <option value="456">Vehicle #456</option>
+            <option value="789">Vehicle #789</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="border-t">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b bg-muted/50">
+              <th class="h-12 px-4 text-left align-middle font-medium">Date</th>
+              <th class="h-12 px-4 text-left align-middle font-medium"
+                >Vehicle</th
+              >
+              <th class="h-12 px-4 text-left align-middle font-medium"
+                >Category</th
+              >
+              <th class="h-12 px-4 text-left align-middle font-medium"
+                >Amount</th
+              >
+              <th class="h-12 px-4 text-left align-middle font-medium">Note</th>
+              <th class="h-12 px-4 text-right align-middle font-medium"
+                >Actions</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="p-4">March 15, 2024</td>
+              <td class="p-4">Vehicle #123</td>
+              <td class="p-4">Fuel</td>
+              <td class="p-4">$234.56</td>
+              <td class="p-4">Regular fill-up</td>
+              <td class="p-4 text-right">
+                <button
+                  class="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-4">March 14, 2024</td>
+              <td class="p-4">Vehicle #456</td>
+              <td class="p-4">Maintenance</td>
+              <td class="p-4">$567.89</td>
+              <td class="p-4">Oil change and filter</td>
+              <td class="p-4 text-right">
+                <button
+                  class="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+            <tr class="border-b">
+              <td class="p-4">March 13, 2024</td>
+              <td class="p-4">Vehicle #789</td>
+              <td class="p-4">Insurance</td>
+              <td class="p-4">$345.67</td>
+              <td class="p-4">Monthly premium</td>
+              <td class="p-4 text-right">
+                <button
+                  class="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between p-4">
+        <div class="text-sm text-muted-foreground">
+          Showing 1 to 3 of 3 entries
+        </div>
+        <div class="flex items-center space-x-2">
+          <button
+            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium"
+          >
+            Previous
+          </button>
+          <button
+            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
