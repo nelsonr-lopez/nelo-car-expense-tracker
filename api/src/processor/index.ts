@@ -4,7 +4,7 @@ import * as path from "path";
 
 // Define the library interface
 const processorLib = ffi.Library(
-  path.join(__dirname, "../../processor/lib/libprocessor"),
+  path.join(__dirname, "../../../processor-service/lib/libprocessor"),
   {
     validate_expense_json: ["string", ["string"]],
     calculate_summary_json: ["string", ["string"]],

@@ -1,0 +1,79 @@
+name: processor-service
+version: 0.1.0.0
+github: "githubuser/processor-service"
+license: BSD-3-Clause
+author: "Author name here"
+maintainer: "example@example.com"
+copyright: "2025 Author name here"
+
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: Expense processing microservice that consumes messages from RabbitMQ
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - amqp
+  - text
+  - bytestring
+  - time
+  - mtl
+  - optparse-applicative
+  - wai
+  - warp
+  - servant
+  - servant-server
+  - http-types
+  - wai-cors
+  - wai-logger
+  - fast-logger
+  - monad-logger
+  - configurator
+  - yaml
+  - split
+  - network-uri
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  processor-service:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - processor-service
+
+tests:
+  processor-service-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - processor-service
