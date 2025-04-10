@@ -11,26 +11,18 @@ interface Props {
 
 const {
   initialSearch = "",
+  categories,
   initialCategory = "",
   initialVehicleId,
   vehicles,
 } = Astro.props;
-
-const categories = [
-  "Fuel",
-  "Maintenance",
-  "Insurance",
-  "Registration",
-  "Tires",
-  "Other",
-];
 
 const formatVehicleLabel = (vehicle: Vehicle) => {
   return `${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`;
 };
 ---
 
-<form id="filters" class="space-y-4">
+<form id="filters" class="p-4 border-b space-y-4">
   <div>
     <label for="search" class="block text-sm font-medium text-gray-700"
       >Search</label
@@ -105,21 +97,29 @@ const formatVehicleLabel = (vehicle: Vehicle) => {
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(window.location.search);
 
     if (searchInput.value) {
-      params.append("search", searchInput.value);
+      params.set("search", searchInput.value);
+    } else {
+      params.delete("search");
     }
 
     if (categorySelect.value) {
-      params.append("category", categorySelect.value);
+      params.set("category", categorySelect.value);
+    } else {
+      params.delete("category");
     }
 
     if (vehicleSelect.value) {
-      params.append("vehicleId", vehicleSelect.value);
+      params.set("vehicleId", vehicleSelect.value);
+    } else {
+      params.delete("vehicleId");
     }
 
-    const queryString = params.toString();
-    window.location.href = queryString ? `?${queryString}` : "/";
+    // Reset to page 1 when filters change
+    params.delete("page");
+
+    window.location.search = params.toString();
   });
 </script>

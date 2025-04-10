@@ -1,4 +1,6 @@
 ---
+import type { Vehicle } from "../lib/api/vehicles";
+
 interface Props {
   expenses: Array<{
     id: number;
@@ -8,9 +10,10 @@ interface Props {
     amount: number;
     note: string;
   }>;
+  vehicles: Vehicle[];
 }
 
-const { expenses } = Astro.props;
+const { expenses, vehicles } = Astro.props;
 
 // Format date function
 function formatDate(dateString: string): string {
@@ -25,6 +28,25 @@ function formatDate(dateString: string): string {
 // Format category function
 function formatCategory(category: string): string {
   return category.charAt(0) + category.slice(1).toLowerCase();
+}
+
+// Format currency function
+function formatCurrency(amount: number | string): string {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  return isNaN(num) ? "0.00" : num.toFixed(2);
+}
+
+// Format vehicle function
+function formatVehicle(
+  vehicleId: number | string,
+  vehicles: Vehicle[]
+): string {
+  // Convert vehicleId to number for comparison
+  const id =
+    typeof vehicleId === "string" ? parseInt(vehicleId, 10) : vehicleId;
+  const vehicle = vehicles?.find((v) => v.id === id);
+  if (!vehicle) return `Vehicle #${vehicleId}`;
+  return `${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`;
 }
 ---
 
@@ -46,9 +68,9 @@ function formatCategory(category: string): string {
           expenses.map((expense) => (
             <tr class="border-b">
               <td class="p-4">{formatDate(expense.date)}</td>
-              <td class="p-4">Vehicle #{expense.vehicleId}</td>
+              <td class="p-4">{formatVehicle(expense.vehicleId, vehicles)}</td>
               <td class="p-4">{formatCategory(expense.category)}</td>
-              <td class="p-4">${expense.amount.toFixed(2)}</td>
+              <td class="p-4">${formatCurrency(expense.amount)}</td>
               <td class="p-4">{expense.note || "-"}</td>
               <td class="p-4 text-right">
                 <a

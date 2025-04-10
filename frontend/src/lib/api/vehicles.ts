@@ -1,10 +1,13 @@
 export interface Vehicle {
   id: number;
-  name: string;
   make: string;
   model: string;
   year: number;
   licensePlate: string;
+  vin: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
@@ -30,7 +33,7 @@ export async function getVehicle(id: number): Promise<Vehicle> {
 }
 
 export async function createVehicle(
-  data: Omit<Vehicle, "id">
+  data: Omit<Vehicle, "id" | "createdAt" | "updatedAt">
 ): Promise<Vehicle> {
   const response = await fetch(`${API_URL}/vehicles`, {
     method: "POST",
@@ -49,7 +52,7 @@ export async function createVehicle(
 
 export async function updateVehicle(
   id: number,
-  data: Partial<Vehicle>
+  data: Partial<Omit<Vehicle, "id" | "createdAt" | "updatedAt">>
 ): Promise<Vehicle> {
   const response = await fetch(`${API_URL}/vehicles/${id}`, {
     method: "PATCH",
