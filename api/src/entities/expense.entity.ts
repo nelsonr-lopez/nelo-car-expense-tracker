@@ -15,7 +15,9 @@ import {
   IsDate,
   IsOptional,
   Min,
+  IsEnum,
 } from 'class-validator';
+import { ExpenseCategory } from '../dto/expense.dto';
 
 @Entity()
 export class Expense {
@@ -29,11 +31,19 @@ export class Expense {
   @IsNotEmpty()
   date: Date;
 
-  @ApiProperty({ description: 'The category of the expense' })
-  @Column()
-  @IsString()
+  @ApiProperty({
+    description: 'The category of the expense',
+    enum: ExpenseCategory,
+    example: ExpenseCategory.FUEL,
+  })
+  @Column({
+    type: 'enum',
+    enum: ExpenseCategory,
+    default: ExpenseCategory.OTHER,
+  })
+  @IsEnum(ExpenseCategory)
   @IsNotEmpty()
-  category: string;
+  category: ExpenseCategory;
 
   @ApiProperty({ description: 'The amount of the expense' })
   @Column({ type: 'decimal', precision: 10, scale: 2 })

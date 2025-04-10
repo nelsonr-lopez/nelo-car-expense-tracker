@@ -1,3 +1,13 @@
+-- Create expense category enum type
+CREATE TYPE expense_category AS ENUM (
+  'FUEL',
+  'MAINTENANCE',
+  'REPAIR',
+  'INSURANCE',
+  'TAX',
+  'OTHER'
+);
+
 -- Create vehicles table
 CREATE TABLE IF NOT EXISTS vehicles (
   id SERIAL PRIMARY KEY,
@@ -14,7 +24,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
 CREATE TABLE IF NOT EXISTS expenses (
   id SERIAL PRIMARY KEY,
   date DATE NOT NULL,
-  category VARCHAR(255) NOT NULL,
+  category expense_category NOT NULL DEFAULT 'OTHER',
   amount DECIMAL(10,2) NOT NULL,
   note TEXT,
   vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,

@@ -54,6 +54,9 @@ export class ExpenseService {
       queryBuilder.andWhere('expense.vehicleId = :vehicleId', { vehicleId });
     }
 
+    // Add default sorting by date descending
+    queryBuilder.orderBy('expense.date', 'DESC');
+
     const [expenses, total] = await queryBuilder
       .skip(skip)
       .take(limit)

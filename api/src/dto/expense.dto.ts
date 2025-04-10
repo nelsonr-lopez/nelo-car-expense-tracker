@@ -1,6 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsDate, IsOptional, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsDate,
+  IsOptional,
+  Min,
+  IsEnum,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+
+export enum ExpenseCategory {
+  FUEL = 'FUEL',
+  MAINTENANCE = 'MAINTENANCE',
+  REPAIR = 'REPAIR',
+  INSURANCE = 'INSURANCE',
+  TAX = 'TAX',
+  OTHER = 'OTHER',
+}
 
 export class CreateExpenseDto {
   @ApiProperty({ description: 'The date of the expense' })
@@ -13,9 +29,13 @@ export class CreateExpenseDto {
   @IsNumber()
   vehicleId: number;
 
-  @ApiProperty({ description: 'The category of the expense' })
-  @IsString()
-  category: string;
+  @ApiProperty({
+    description: 'The category of the expense',
+    enum: ExpenseCategory,
+    example: ExpenseCategory.FUEL,
+  })
+  @IsEnum(ExpenseCategory)
+  category: ExpenseCategory;
 
   @ApiProperty({ description: 'The amount of the expense' })
   @IsNumber()
@@ -47,10 +67,15 @@ export class UpdateExpenseDto {
   @IsOptional()
   vehicleId?: number;
 
-  @ApiProperty({ description: 'The category of the expense', required: false })
-  @IsString()
+  @ApiProperty({
+    description: 'The category of the expense',
+    required: false,
+    enum: ExpenseCategory,
+    example: ExpenseCategory.FUEL,
+  })
+  @IsEnum(ExpenseCategory)
   @IsOptional()
-  category?: string;
+  category?: ExpenseCategory;
 
   @ApiProperty({ description: 'The amount of the expense', required: false })
   @IsNumber()
@@ -76,10 +101,15 @@ export class ExpenseFiltersDto {
   @IsOptional()
   search?: string;
 
-  @ApiProperty({ description: 'Filter by expense category', required: false })
-  @IsString()
+  @ApiProperty({
+    description: 'Filter by expense category',
+    required: false,
+    enum: ExpenseCategory,
+    example: ExpenseCategory.FUEL,
+  })
+  @IsEnum(ExpenseCategory)
   @IsOptional()
-  category?: string;
+  category?: ExpenseCategory;
 
   @ApiProperty({ description: 'Filter by vehicle ID', required: false })
   @Type(() => Number)

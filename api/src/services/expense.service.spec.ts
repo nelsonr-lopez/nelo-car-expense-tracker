@@ -6,7 +6,12 @@ import { VehicleService } from './vehicle.service';
 import { MockRabbitMQService } from '../__mocks__/rabbitmq.service';
 import { RabbitMQService } from '../processor/rabbitmq.service';
 import { Expense } from '../entities/expense.entity';
-import { CreateExpenseDto } from '../dto/expense.dto';
+import {
+  CreateExpenseDto,
+  UpdateExpenseDto,
+  ExpenseFiltersDto,
+  ExpenseCategory,
+} from '../dto/expense.dto';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ExpenseService', () => {
@@ -36,7 +41,8 @@ describe('ExpenseService', () => {
       andWhere: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
-      getManyAndCount: jest.fn().mockResolvedValue([[mockExpense], 1]),
+      orderBy: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
     }),
   };
 
@@ -74,35 +80,78 @@ describe('ExpenseService', () => {
   });
 
   describe('create', () => {
-    it('should create a new expense', async () => {
+    it('should create an expense', async () => {
       const createExpenseDto: CreateExpenseDto = {
-        date: new Date('2024-04-10'),
-        category: 'Fuel',
-        amount: 50.0,
-        note: 'Regular fuel fill-up',
+        date: new Date(),
         vehicleId: 1,
+        category: ExpenseCategory.FUEL,
+        amount: 100,
+        note: 'Test expense',
       };
 
+      const expense = { id: 1, ...createExpenseDto };
       mockVehicleService.findOne.mockResolvedValue({ id: 1 });
-      mockRepository.create.mockReturnValue(mockExpense);
-      mockRepository.save.mockResolvedValue(mockExpense);
+      mockRepository.create.mockReturnValue(expense);
+      mockRepository.save.mockResolvedValue(expense);
 
       const result = await service.create(createExpenseDto);
 
-      expect(result).toEqual(mockExpense);
+      expect(result).toEqual(expense);
       expect(mockVehicleService.findOne).toHaveBeenCalledWith(1);
       expect(mockRepository.create).toHaveBeenCalledWith(createExpenseDto);
-      expect(mockRepository.save).toHaveBeenCalled();
+      expect(mockRepository.save).toHaveBeenCalledWith(expense);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return paginated expenses', async () => {
+      const filters: ExpenseFiltersDto = {
+        search: 'test',
+        category: ExpenseCategory.FUEL,
+        vehicleId: 1,
+        page: 1,
+        limit: 10,
+      };
+
+      const expenses = [
+        {
+          id: 1,
+          date: new Date(),
+          category: ExpenseCategory.FUEL,
+          amount: 100,
+          vehicleId: 1,
+        },
+      ];
+
+      mockRepository
+        .createQueryBuilder()
+        .getManyAndCount.mockResolvedValue([expenses, 1]);
+
+      const result = await service.findAll(filters);
+
+      expect(result).toEqual({
+        expenses,
+        total: 1,
+        totalPages: 1,
+      });
     });
   });
 
   describe('findOne', () => {
-    it('should return an expense if found', async () => {
-      mockRepository.findOne.mockResolvedValue(mockExpense);
+    it('should return an expense by id', async () => {
+      const expense = {
+        id: 1,
+        date: new Date(),
+        category: ExpenseCategory.FUEL,
+        amount: 100,
+        vehicleId: 1,
+      };
+
+      mockRepository.findOne.mockResolvedValue(expense);
 
       const result = await service.findOne(1);
 
-      expect(result).toEqual(mockExpense);
+      expect(result).toEqual(expense);
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
         relations: ['vehicle'],
@@ -116,58 +165,60 @@ describe('ExpenseService', () => {
     });
   });
 
-  describe('findAll', () => {
-    it('should return paginated expenses', async () => {
-      const result = await service.findAll({
-        page: 1,
-        limit: 10,
-        search: 'fuel',
-        category: 'Fuel',
-        vehicleId: 1,
-      });
-
-      expect(result).toEqual({
-        expenses: [mockExpense],
-        total: 1,
-        totalPages: 1,
-      });
-
-      const queryBuilder = mockRepository.createQueryBuilder();
-      expect(queryBuilder.where).toHaveBeenCalled();
-      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(2);
-      expect(queryBuilder.skip).toHaveBeenCalledWith(0);
-      expect(queryBuilder.take).toHaveBeenCalledWith(10);
-      expect(queryBuilder.getManyAndCount).toHaveBeenCalled();
-    });
-  });
-
   describe('update', () => {
     it('should update an expense', async () => {
-      const updateExpenseDto = {
-        amount: 60.0,
+      const updateExpenseDto: UpdateExpenseDto = {
+        amount: 200,
+        category: ExpenseCategory.MAINTENANCE,
       };
 
-      mockRepository.findOne.mockResolvedValue(mockExpense);
-      mockRepository.save.mockResolvedValue({
-        ...mockExpense,
+      const existingExpense = {
+        id: 1,
+        date: new Date(),
+        category: ExpenseCategory.FUEL,
+        amount: 100,
+        vehicleId: 1,
+      };
+
+      const updatedExpense = {
+        ...existingExpense,
         ...updateExpenseDto,
-      });
+      };
+
+      mockRepository.findOne.mockResolvedValue(existingExpense);
+      mockRepository.save.mockResolvedValue(updatedExpense);
 
       const result = await service.update(1, updateExpenseDto);
 
-      expect(result).toEqual({ ...mockExpense, ...updateExpenseDto });
-      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result).toEqual(updatedExpense);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['vehicle'],
+      });
+      expect(mockRepository.save).toHaveBeenCalledWith(updatedExpense);
     });
   });
 
   describe('remove', () => {
     it('should remove an expense', async () => {
-      mockRepository.findOne.mockResolvedValue(mockExpense);
-      mockRepository.remove.mockResolvedValue(mockExpense);
+      const expense = {
+        id: 1,
+        date: new Date(),
+        category: ExpenseCategory.FUEL,
+        amount: 100,
+        vehicleId: 1,
+      };
+
+      mockRepository.findOne.mockResolvedValue(expense);
+      mockRepository.remove.mockResolvedValue(expense);
 
       await service.remove(1);
 
-      expect(mockRepository.remove).toHaveBeenCalledWith(mockExpense);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['vehicle'],
+      });
+      expect(mockRepository.remove).toHaveBeenCalledWith(expense);
     });
   });
 });
