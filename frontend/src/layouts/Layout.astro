@@ -1,4 +1,6 @@
 ---
+import "../styles/globals.css";
+
 interface Props {
   title: string;
 }
@@ -10,9 +12,28 @@ const { title } = Astro.props;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} - Cab Expense Tracker</title>
+    <meta name="description" content="Vehicle Expense Tracker" />
+    <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script is:inline>
+      // Initialize theme on page load to prevent flash
+      (function () {
+        try {
+          const storedTheme = localStorage.getItem("theme");
+          const systemPrefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+          ).matches;
+          const theme = storedTheme || (systemPrefersDark ? "dark" : "light");
+
+          document.documentElement.classList.remove("light", "dark");
+          document.documentElement.classList.add(theme);
+        } catch (e) {
+          console.error("Error initializing theme:", e);
+        }
+      })();
+    </script>
   </head>
   <body class="min-h-screen bg-background font-sans antialiased">
     <div class="relative flex min-h-screen flex-col">
@@ -21,24 +42,74 @@ const { title } = Astro.props;
       >
         <div class="container flex h-14 items-center">
           <div class="mr-4 flex">
-            <a class="mr-6 flex items-center space-x-2" href="/">
-              <span class="font-bold">Cab Expense Tracker</span>
+            <a href="/" class="mr-6 flex items-center space-x-2">
+              <span class="font-bold">Vehicle Expense Tracker</span>
             </a>
             <nav class="flex items-center space-x-6 text-sm font-medium">
               <a
                 href="/dashboard"
-                class="transition-colors hover:text-foreground/80">Dashboard</a
+                class="transition-colors hover:text-foreground/80 text-foreground/60"
               >
+                Dashboard
+              </a>
               <a
                 href="/expenses"
-                class="transition-colors hover:text-foreground/80">Expenses</a
+                class="transition-colors hover:text-foreground/80 text-foreground/60"
               >
+                Expenses
+              </a>
               <a
                 href="/add-expense"
-                class="transition-colors hover:text-foreground/80"
-                >Add Expense</a
+                class="transition-colors hover:text-foreground/80 text-foreground/60"
               >
+                Add Expense
+              </a>
             </nav>
+          </div>
+          <div class="flex flex-1 items-center justify-end space-x-4">
+            <button
+              id="theme-toggle"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              aria-label="Toggle theme"
+            >
+              <svg
+                id="sun-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-[1.2rem] w-[1.2rem]"
+              >
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="12" y1="2" x2="12" y2="4"></line>
+                <line x1="12" y1="20" x2="12" y2="22"></line>
+                <line x1="17" y1="5" x2="19" y2="7"></line>
+                <line x1="5" y1="17" x2="7" y2="19"></line>
+                <line x1="19" y1="17" x2="17" y2="19"></line>
+                <line x1="5" y1="5" x2="7" y2="7"></line>
+              </svg>
+              <svg
+                id="moon-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-[1.2rem] w-[1.2rem] hidden"
+              >
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+              </svg>
+              <span class="sr-only">Toggle theme</span>
+            </button>
           </div>
         </div>
       </header>
@@ -48,6 +119,7 @@ const { title } = Astro.props;
         </div>
       </main>
     </div>
+    <script is:inline src="/js/theme-toggle.js"></script>
   </body>
 </html>
 

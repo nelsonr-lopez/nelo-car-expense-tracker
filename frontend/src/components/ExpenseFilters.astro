@@ -1,0 +1,54 @@
+---
+interface Props {
+  categories: Array<string>;
+  vehicles: Array<{
+    id: string;
+    name: string;
+  }>;
+  initialSearch?: string;
+  initialCategory?: string;
+  initialVehicleId?: string;
+}
+
+const {
+  categories,
+  vehicles,
+  initialSearch = "",
+  initialCategory = "",
+  initialVehicleId = "",
+} = Astro.props;
+---
+
+<div class="p-4">
+  <div class="flex items-center space-x-4">
+    <input
+      type="text"
+      placeholder="Search expenses..."
+      class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+      value={initialSearch}
+    />
+    <select class="h-10 rounded-md border border-input bg-background px-3 py-2">
+      <option value="">All Categories</option>
+      {
+        categories.map((category) => (
+          <option
+            value={category.toLowerCase()}
+            selected={category.toLowerCase() === initialCategory.toLowerCase()}
+          >
+            {category}
+          </option>
+        ))
+      }
+    </select>
+    <select class="h-10 rounded-md border border-input bg-background px-3 py-2">
+      <option value="">All Vehicles</option>
+      {
+        vehicles.map((vehicle) => (
+          <option value={vehicle.id} selected={vehicle.id === initialVehicleId}>
+            Vehicle #{vehicle.id}
+          </option>
+        ))
+      }
+    </select>
+  </div>
+</div>

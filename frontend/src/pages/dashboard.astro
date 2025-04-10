@@ -1,90 +1,135 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { getExpenses } from "../lib/api/expenses";
+import { getVehicles } from "../lib/api/vehicles";
+import type { Expense } from "../lib/api/expenses";
+import type { Vehicle } from "../lib/api/vehicles";
+
+// Initialize variables
+let expenses: Expense[] = [];
+let vehicles: Vehicle[] = [];
+let error: string | null = null;
+let isLoading = true;
+
+// Fetch data from API
+try {
+  // Fetch all expenses for the dashboard
+  const expensesResult = await getExpenses({ limit: 100 });
+  expenses = expensesResult.expenses;
+  
+  // Fetch vehicles
+  vehicles = await getVehicles();
+  
+  isLoading = false;
+} catch (e) {
+  error = e instanceof Error ? e.message : "An unknown error occurred";
+  isLoading = false;
+}
+
+// Calculate statistics
+const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+const expensesByCategory = expenses.reduce((acc, expense) => {
+  const category = expense.category;
+  acc[category] = (acc[category] || 0) + expense.amount;
+  return acc;
+}, {} as Record<string, number>);
+
+const expensesByVehicle = expenses.reduce((acc, expense) => {
+  const vehicleId = expense.vehicleId;
+  acc[vehicleId] = (acc[vehicleId] || 0) + expense.amount;
+  return acc;
+}, {} as Record<string, number>);
+
+// Get vehicle names
+const vehicleNames = vehicles.reduce((acc, vehicle) => {
+  acc[vehicle.id] = vehicle.name;
+  return acc;
+}, {} as Record<string, string>);
 ---
 
 <Layout title="Dashboard">
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold">Dashboard</h1>
-      <div class="flex items-center space-x-2">
-        <select
-          class="h-10 rounded-md border border-input bg-background px-3 py-2"
-        >
-          <option value="2024-03">March 2024</option>
-          <option value="2024-02">February 2024</option>
-          <option value="2024-01">January 2024</option>
-        </select>
-      </div>
+      <a
+        href="/expenses"
+        class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        View All Expenses
+      </a>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-lg border bg-card p-6 text-card-foreground">
-        <h3 class="text-sm font-medium">Total Expenses</h3>
-        <p class="mt-2 text-3xl font-bold">$12,345.67</p>
+    {isLoading ? (
+      <div class="py-12 text-center">
+        <p class="text-muted-foreground">Loading dashboard data...</p>
       </div>
-      <div class="rounded-lg border bg-card p-6 text-card-foreground">
-        <h3 class="text-sm font-medium">Average Daily</h3>
-        <p class="mt-2 text-3xl font-bold">$398.25</p>
+    ) : error ? (
+      <div class="p-4">
+        <div class="rounded-md bg-destructive/15 p-4 text-destructive">
+          <p>{error}</p>
+        </div>
       </div>
-      <div class="rounded-lg border bg-card p-6 text-card-foreground">
-        <h3 class="text-sm font-medium">Most Common Category</h3>
-        <p class="mt-2 text-3xl font-bold">Fuel</p>
-      </div>
-      <div class="rounded-lg border bg-card p-6 text-card-foreground">
-        <h3 class="text-sm font-medium">Active Vehicles</h3>
-        <p class="mt-2 text-3xl font-bold">5</p>
-      </div>
-    </div>
+    ) : (
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Total Expenses Card -->
+        <div class="rounded-lg border p-6">
+          <h2 class="text-lg font-medium">Total Expenses</h2>
+          <p class="mt-2 text-3xl font-bold">${totalExpenses.toFixed(2)}</p>
+        </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="rounded-lg border bg-card p-6">
-        <h3 class="text-lg font-medium">Expenses by Category</h3>
-        <div class="mt-4 space-y-4">
-          <div class="flex items-center justify-between">
-            <span>Fuel</span>
-            <span class="font-medium">$5,234.56</span>
+        <!-- Expenses by Category Card -->
+        <div class="rounded-lg border p-6">
+          <h2 class="text-lg font-medium">Expenses by Category</h2>
+          <div class="mt-4 space-y-2">
+            {Object.entries(expensesByCategory).map(([category, amount]) => (
+              <div class="flex items-center justify-between">
+                <span class="capitalize">{category}</span>
+                <span class="font-medium">${amount.toFixed(2)}</span>
+              </div>
+            ))}
           </div>
-          <div class="flex items-center justify-between">
-            <span>Maintenance</span>
-            <span class="font-medium">$3,456.78</span>
+        </div>
+
+        <!-- Expenses by Vehicle Card -->
+        <div class="rounded-lg border p-6">
+          <h2 class="text-lg font-medium">Expenses by Vehicle</h2>
+          <div class="mt-4 space-y-2">
+            {Object.entries(expensesByVehicle).map(([vehicleId, amount]) => (
+              <div class="flex items-center justify-between">
+                <span>{vehicleNames[vehicleId] || `Vehicle #${vehicleId}`}</span>
+                <span class="font-medium">${amount.toFixed(2)}</span>
+              </div>
+            ))}
           </div>
-          <div class="flex items-center justify-between">
-            <span>Insurance</span>
-            <span class="font-medium">$2,345.67</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span>Other</span>
-            <span class="font-medium">$1,308.66</span>
+        </div>
+
+        <!-- Recent Expenses Card -->
+        <div class="col-span-full rounded-lg border p-6">
+          <h2 class="text-lg font-medium">Recent Expenses</h2>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b bg-muted/50">
+                  <th class="h-12 px-4 text-left align-middle font-medium">Date</th>
+                  <th class="h-12 px-4 text-left align-middle font-medium">Vehicle</th>
+                  <th class="h-12 px-4 text-left align-middle font-medium">Category</th>
+                  <th class="h-12 px-4 text-left align-middle font-medium">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.slice(0, 5).map((expense) => (
+                  <tr class="border-b">
+                    <td class="p-4">{expense.date}</td>
+                    <td class="p-4">{vehicleNames[expense.vehicleId] || `Vehicle #${expense.vehicleId}`}</td>
+                    <td class="p-4 capitalize">{expense.category}</td>
+                    <td class="p-4">${expense.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-
-      <div class="rounded-lg border bg-card p-6">
-        <h3 class="text-lg font-medium">Recent Expenses</h3>
-        <div class="mt-4 space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-medium">Fuel - Vehicle #123</p>
-              <p class="text-sm text-muted-foreground">March 15, 2024</p>
-            </div>
-            <span class="font-medium">$234.56</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-medium">Maintenance - Vehicle #456</p>
-              <p class="text-sm text-muted-foreground">March 14, 2024</p>
-            </div>
-            <span class="font-medium">$567.89</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-medium">Insurance - Vehicle #789</p>
-              <p class="text-sm text-muted-foreground">March 13, 2024</p>
-            </div>
-            <span class="font-medium">$345.67</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    )}
   </div>
 </Layout>

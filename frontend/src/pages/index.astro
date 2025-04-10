@@ -2,25 +2,109 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Home">
-  <div class="flex flex-col items-center justify-center space-y-4 text-center">
-    <h1 class="text-4xl font-bold">Welcome to Cab Expense Tracker</h1>
-    <p class="text-xl text-muted-foreground">
-      Track and manage your cab company expenses efficiently
+<Layout title="Vehicle Expense Tracker">
+  <div
+    class="flex flex-col items-center justify-center space-y-8 py-12 text-center"
+  >
+    <h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+      Vehicle Expense Tracker
+    </h1>
+    <p class="max-w-2xl text-lg text-muted-foreground">
+      Track and manage your vehicle expenses in one place. Monitor fuel costs,
+      maintenance, insurance, and more.
     </p>
-    <div class="flex space-x-4">
+    <div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
       <a
         href="/dashboard"
-        class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 py-2 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
       >
-        Go to Dashboard
+        View Dashboard
       </a>
       <a
-        href="/add-expense"
-        class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+        href="/expenses"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
       >
-        Add Expense
+        Manage Expenses
       </a>
+    </div>
+  </div>
+
+  <div class="grid gap-8 py-12 md:grid-cols-3">
+    <div class="rounded-lg border p-6">
+      <div
+        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+          ></path>
+        </svg>
+      </div>
+      <h2 class="mb-2 text-xl font-semibold">Track Expenses</h2>
+      <p class="text-muted-foreground">
+        Easily record and categorize all your vehicle-related expenses in one
+        place.
+      </p>
+    </div>
+
+    <div class="rounded-lg border p-6">
+      <div
+        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+          ></path>
+        </svg>
+      </div>
+      <h2 class="mb-2 text-xl font-semibold">Analyze Costs</h2>
+      <p class="text-muted-foreground">
+        Get insights into your spending patterns with detailed reports and
+        analytics.
+      </p>
+    </div>
+
+    <div class="rounded-lg border p-6">
+      <div
+        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h2 class="mb-2 text-xl font-semibold">Save Time</h2>
+      <p class="text-muted-foreground">
+        Streamline your expense management process and focus on what matters
+        most.
+      </p>
     </div>
   </div>
 </Layout>

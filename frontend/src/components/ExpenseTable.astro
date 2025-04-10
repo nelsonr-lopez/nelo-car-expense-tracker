@@ -1,0 +1,50 @@
+---
+interface Props {
+  expenses: Array<{
+    id: string;
+    date: string;
+    vehicleId: string;
+    category: string;
+    amount: number;
+    note: string;
+  }>;
+}
+
+const { expenses } = Astro.props;
+---
+
+<div class="rounded-lg border">
+  <div class="border-t">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b bg-muted/50">
+          <th class="h-12 px-4 text-left align-middle font-medium">Date</th>
+          <th class="h-12 px-4 text-left align-middle font-medium">Vehicle</th>
+          <th class="h-12 px-4 text-left align-middle font-medium">Category</th>
+          <th class="h-12 px-4 text-left align-middle font-medium">Amount</th>
+          <th class="h-12 px-4 text-left align-middle font-medium">Note</th>
+          <th class="h-12 px-4 text-right align-middle font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          expenses.map((expense) => (
+            <tr class="border-b">
+              <td class="p-4">{expense.date}</td>
+              <td class="p-4">Vehicle #{expense.vehicleId}</td>
+              <td class="p-4">{expense.category}</td>
+              <td class="p-4">${expense.amount.toFixed(2)}</td>
+              <td class="p-4">{expense.note}</td>
+              <td class="p-4 text-right">
+                <button class="text-sm text-muted-foreground hover:text-foreground">
+                  Edit
+                </button>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+

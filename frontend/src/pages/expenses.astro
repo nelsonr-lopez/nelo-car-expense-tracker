@@ -1,5 +1,56 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import ExpenseTable from "../components/ExpenseTable.astro";
+import ExpenseFilters from "../components/ExpenseFilters.astro";
+import Pagination from "../components/Pagination.astro";
+import LoadingSpinner from "../components/LoadingSpinner.astro";
+import ErrorMessage from "../components/ErrorMessage.astro";
+import { getExpenses } from "../lib/api/expenses";
+import { getVehicles } from "../lib/api/vehicles";
+import type { Expense } from "../lib/api/expenses";
+import type { Vehicle } from "../lib/api/vehicles";
+
+// Get query parameters
+const { searchParams } = Astro.url;
+const page = parseInt(searchParams.get("page") || "1");
+const category = searchParams.get("category") || "";
+const vehicleId = searchParams.get("vehicleId") || "";
+const search = searchParams.get("search") || "";
+const limit = 10;
+
+// Initialize variables
+let expenses: Expense[] = [];
+let total = 0;
+let totalPages = 1;
+let error: string | null = null;
+let isLoading = true;
+let vehicles: Vehicle[] = [];
+
+// Fetch data from API
+try {
+  // Fetch expenses
+  const expensesResult = await getExpenses({
+    page,
+    limit,
+    category: category || undefined,
+    vehicleId: vehicleId || undefined,
+    search: search || undefined,
+  });
+
+  expenses = expensesResult.expenses;
+  total = expensesResult.total;
+  totalPages = expensesResult.totalPages;
+
+  // Fetch vehicles
+  vehicles = await getVehicles();
+
+  isLoading = false;
+} catch (e) {
+  error = e instanceof Error ? e.message : "An unknown error occurred";
+  isLoading = false;
+}
+
+const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
 ---
 
 <Layout title="Expenses">
@@ -15,117 +66,111 @@ import Layout from "../layouts/Layout.astro";
     </div>
 
     <div class="rounded-lg border">
-      <div class="p-4">
-        <div class="flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Search expenses..."
-            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-          />
-          <select
-            class="h-10 rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="">All Categories</option>
-            <option value="fuel">Fuel</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="insurance">Insurance</option>
-            <option value="other">Other</option>
-          </select>
-          <select
-            class="h-10 rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="">All Vehicles</option>
-            <option value="123">Vehicle #123</option>
-            <option value="456">Vehicle #456</option>
-            <option value="789">Vehicle #789</option>
-          </select>
-        </div>
-      </div>
+      <ExpenseFilters
+        categories={categories}
+        vehicles={vehicles}
+        initialSearch={search}
+        initialCategory={category}
+        initialVehicleId={vehicleId}
+      />
 
-      <div class="border-t">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b bg-muted/50">
-              <th class="h-12 px-4 text-left align-middle font-medium">Date</th>
-              <th class="h-12 px-4 text-left align-middle font-medium"
-                >Vehicle</th
-              >
-              <th class="h-12 px-4 text-left align-middle font-medium"
-                >Category</th
-              >
-              <th class="h-12 px-4 text-left align-middle font-medium"
-                >Amount</th
-              >
-              <th class="h-12 px-4 text-left align-middle font-medium">Note</th>
-              <th class="h-12 px-4 text-right align-middle font-medium"
-                >Actions</th
-              >
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b">
-              <td class="p-4">March 15, 2024</td>
-              <td class="p-4">Vehicle #123</td>
-              <td class="p-4">Fuel</td>
-              <td class="p-4">$234.56</td>
-              <td class="p-4">Regular fill-up</td>
-              <td class="p-4 text-right">
-                <button
-                  class="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-            <tr class="border-b">
-              <td class="p-4">March 14, 2024</td>
-              <td class="p-4">Vehicle #456</td>
-              <td class="p-4">Maintenance</td>
-              <td class="p-4">$567.89</td>
-              <td class="p-4">Oil change and filter</td>
-              <td class="p-4 text-right">
-                <button
-                  class="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-            <tr class="border-b">
-              <td class="p-4">March 13, 2024</td>
-              <td class="p-4">Vehicle #789</td>
-              <td class="p-4">Insurance</td>
-              <td class="p-4">$345.67</td>
-              <td class="p-4">Monthly premium</td>
-              <td class="p-4 text-right">
-                <button
-                  class="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="flex items-center justify-between p-4">
-        <div class="text-sm text-muted-foreground">
-          Showing 1 to 3 of 3 entries
-        </div>
-        <div class="flex items-center space-x-2">
-          <button
-            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium"
-          >
-            Previous
-          </button>
-          <button
-            class="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      {
+        isLoading ? (
+          <div class="py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : error ? (
+          <div class="p-4">
+            <ErrorMessage message={error} retry={true} />
+          </div>
+        ) : expenses.length === 0 ? (
+          <div class="p-8 text-center text-muted-foreground">
+            <p>
+              No expenses found. Try adjusting your filters or add a new
+              expense.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ExpenseTable expenses={expenses} />
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              itemsPerPage={limit}
+            />
+          </>
+        )
+      }
     </div>
   </div>
 </Layout>
+
+<script>
+  // Handle filter changes
+  const searchInput = document.querySelector(
+    'input[type="text"]'
+  ) as HTMLInputElement;
+  const categorySelect = document.querySelector(
+    "select:first-of-type"
+  ) as HTMLSelectElement;
+  const vehicleSelect = document.querySelector(
+    "select:last-of-type"
+  ) as HTMLSelectElement;
+  const prevButton = document.querySelector(
+    "button:first-of-type"
+  ) as HTMLButtonElement;
+  const nextButton = document.querySelector(
+    "button:last-of-type"
+  ) as HTMLButtonElement;
+  const retryButton = document.getElementById("retry-button");
+
+  function updateFilters() {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    if (searchInput.value) searchParams.set("search", searchInput.value);
+    else searchParams.delete("search");
+
+    if (categorySelect.value)
+      searchParams.set("category", categorySelect.value);
+    else searchParams.delete("category");
+
+    if (vehicleSelect.value) searchParams.set("vehicleId", vehicleSelect.value);
+    else searchParams.delete("vehicleId");
+
+    window.location.search = searchParams.toString();
+  }
+
+  // Add event listeners
+  searchInput.addEventListener("input", () => {
+    const timeoutId = setTimeout(updateFilters, 500);
+    searchInput.dataset.timeoutId = timeoutId.toString();
+  });
+
+  categorySelect.addEventListener("change", updateFilters);
+  vehicleSelect.addEventListener("change", updateFilters);
+
+  // Handle pagination
+  prevButton.addEventListener("click", () => {
+    if (prevButton.disabled) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const currentPage = parseInt(searchParams.get("page") || "1");
+    searchParams.set("page", (currentPage - 1).toString());
+    window.location.search = searchParams.toString();
+  });
+
+  nextButton.addEventListener("click", () => {
+    if (nextButton.disabled) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const currentPage = parseInt(searchParams.get("page") || "1");
+    searchParams.set("page", (currentPage + 1).toString());
+    window.location.search = searchParams.toString();
+  });
+
+  // Handle retry button
+  if (retryButton) {
+    retryButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+  }
+</script>
