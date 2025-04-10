@@ -1,16 +1,14 @@
-import * as ffi from "ffi-napi";
-import * as ref from "ref-napi";
-import * as path from "path";
+import * as path from 'path';
 
 // Define the library interface
 const processorLib = ffi.Library(
-  path.join(__dirname, "../../../processor-service/lib/libprocessor"),
+  path.join(__dirname, '../../../processor-service/lib/libprocessor'),
   {
-    validate_expense_json: ["string", ["string"]],
-    calculate_summary_json: ["string", ["string"]],
-    calculate_monthly_summary_json: ["string", ["string", "string"]],
-    calculate_vehicle_summary_json: ["string", ["string", "int"]],
-  }
+    validate_expense_json: ['string', ['string']],
+    calculate_summary_json: ['string', ['string']],
+    calculate_monthly_summary_json: ['string', ['string', 'string']],
+    calculate_vehicle_summary_json: ['string', ['string', 'int']],
+  },
 );
 
 export class ExpenseProcessor {
@@ -32,22 +30,22 @@ export class ExpenseProcessor {
 
   static calculateMonthlySummary(
     expensesJson: string,
-    month: string
+    month: string,
   ): { totalExpenses: number; byCategory: [string, number][] } {
     const result = processorLib.calculate_monthly_summary_json(
       expensesJson,
-      month
+      month,
     );
     return JSON.parse(result);
   }
 
   static calculateVehicleSummary(
     expensesJson: string,
-    vehicleId: number
+    vehicleId: number,
   ): { totalExpenses: number; byCategory: [string, number][] } {
     const result = processorLib.calculate_vehicle_summary_json(
       expensesJson,
-      vehicleId
+      vehicleId,
     );
     return JSON.parse(result);
   }

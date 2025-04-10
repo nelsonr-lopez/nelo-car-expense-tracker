@@ -2,15 +2,19 @@
 import Layout from "../layouts/Layout.astro";
 import { getVehicles } from "../lib/api/vehicles";
 import type { Vehicle } from "../lib/api/vehicles";
+import FormField from "../components/FormField.astro";
+import { getExpenseFormConfig } from "../lib/config/expense-form";
 
 // Initialize variables
 let vehicles: Vehicle[] = [];
 let error: string | null = null;
 let isLoading = true;
+let formSections: ReturnType<typeof getExpenseFormConfig> = [];
 
 // Fetch vehicles from API
 try {
   vehicles = await getVehicles();
+  formSections = getExpenseFormConfig(vehicles);
   isLoading = false;
 } catch (e) {
   error = e instanceof Error ? e.message : "An unknown error occurred";
@@ -45,97 +49,47 @@ const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
             </div>
           </div>
         ) : (
-          <form id="expense-form" class="space-y-6">
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <label for="date" class="text-sm font-medium">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  required
-                  class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                />
-              </div>
+          <form id="expense-form" class="space-y-8">
+            <div
+              id="form-error"
+              class="hidden rounded-md bg-destructive/15 p-4 text-destructive"
+            />
 
-              <div class="space-y-2">
-                <label for="vehicle" class="text-sm font-medium">
-                  Vehicle
-                </label>
-                <select
-                  id="vehicle"
-                  name="vehicleId"
-                  required
-                  class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  <option value="">Select a vehicle</option>
-                  {vehicles.map((vehicle) => (
-                    <option value={vehicle.id}>
-                      {vehicle.name} ({vehicle.make} {vehicle.model}{" "}
-                      {vehicle.year})
-                    </option>
+            {formSections.map((section) => (
+              <div class="space-y-4">
+                <div>
+                  <h2 class="text-lg font-medium">{section.title}</h2>
+                  <p class="text-sm text-muted-foreground">
+                    {section.description}
+                  </p>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                  {section.fields.map((field) => (
+                    <FormField field={field} />
                   ))}
-                </select>
-              </div>
-
-              <div class="space-y-2">
-                <label for="category" class="text-sm font-medium">
-                  Category
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  required
-                  class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option value={category.toLowerCase()}>{category}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div class="space-y-2">
-                <label for="amount" class="text-sm font-medium">
-                  Amount
-                </label>
-                <div class="relative">
-                  <span class="absolute left-3 top-2.5 text-muted-foreground">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    step="0.01"
-                    min="0"
-                    required
-                    class="h-10 w-full rounded-md border border-input bg-background pl-8 pr-3 py-2"
-                  />
                 </div>
               </div>
-            </div>
+            ))}
 
-            <div class="space-y-2">
-              <label for="note" class="text-sm font-medium">
-                Note
-              </label>
-              <textarea
-                id="note"
-                name="note"
-                rows="3"
-                class="w-full rounded-md border border-input bg-background px-3 py-2"
-              />
-            </div>
-
-            <div class="flex justify-end">
+            <div class="flex justify-end space-x-2">
+              <button
+                type="button"
+                id="reset-button"
+                class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                Reset
+              </button>
               <button
                 type="submit"
+                id="submit-button"
                 class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Add Expense
+                <span id="submit-text">Add Expense</span>
+                <span
+                  id="submit-spinner"
+                  class="hidden ml-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                />
               </button>
             </div>
           </form>
@@ -149,11 +103,87 @@ const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
   import { createExpense } from "../lib/api/expenses";
 
   const form = document.getElementById("expense-form") as HTMLFormElement;
+  const formError = document.getElementById("form-error") as HTMLDivElement;
+  const submitButton = document.getElementById(
+    "submit-button"
+  ) as HTMLButtonElement;
+  const submitText = document.getElementById("submit-text") as HTMLSpanElement;
+  const submitSpinner = document.getElementById(
+    "submit-spinner"
+  ) as HTMLSpanElement;
+  const resetButton = document.getElementById(
+    "reset-button"
+  ) as HTMLButtonElement;
 
+  // Set default date to today
+  const dateInput = document.getElementById("date") as HTMLInputElement;
+  const today = new Date().toISOString().split("T")[0];
+  dateInput.value = today;
+
+  // Form validation
+  function validateForm(formData: FormData): string | null {
+    const date = formData.get("date") as string;
+    const vehicleId = formData.get("vehicleId") as string;
+    const category = formData.get("category") as string;
+    const amount = formData.get("amount") as string;
+
+    if (!date) return "Date is required";
+    if (!vehicleId) return "Vehicle is required";
+    if (!category) return "Category is required";
+    if (!amount) return "Amount is required";
+
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0)
+      return "Amount must be a positive number";
+
+    return null;
+  }
+
+  // Show error message
+  function showError(message: string) {
+    formError.textContent = message;
+    formError.classList.remove("hidden");
+  }
+
+  // Hide error message
+  function hideError() {
+    formError.classList.add("hidden");
+  }
+
+  // Set loading state
+  function setLoading(isLoading: boolean) {
+    if (isLoading) {
+      submitButton.disabled = true;
+      submitText.textContent = "Adding...";
+      submitSpinner.classList.remove("hidden");
+    } else {
+      submitButton.disabled = false;
+      submitText.textContent = "Add Expense";
+      submitSpinner.classList.add("hidden");
+    }
+  }
+
+  // Reset form
+  function resetForm() {
+    form.reset();
+    dateInput.value = today; // Reset date to today
+    hideError();
+  }
+
+  // Form submission
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    hideError();
 
     const formData = new FormData(form);
+
+    // Validate form
+    const validationError = validateForm(formData);
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
+
     const date = formData.get("date") as string;
     const vehicleId = formData.get("vehicleId") as string;
     const category = formData.get("category") as string;
@@ -161,7 +191,10 @@ const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
     const note = formData.get("note") as string;
 
     try {
-      await createExpense({
+      setLoading(true);
+
+      // Log the request data for debugging
+      console.log("Sending expense data:", {
         date,
         vehicleId,
         category,
@@ -169,11 +202,28 @@ const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
         note,
       });
 
+      const response = await createExpense({
+        date,
+        vehicleId,
+        category,
+        amount,
+        note,
+      });
+
+      console.log("Response:", response);
+
+      // Show success message
+      alert("Expense added successfully!");
+
       // Redirect to expenses page
       window.location.href = "/expenses";
     } catch (error) {
       console.error("Failed to create expense:", error);
-      alert("Failed to create expense. Please try again.");
+      showError("Failed to create expense. Please try again.");
+      setLoading(false);
     }
   });
+
+  // Reset button
+  resetButton.addEventListener("click", resetForm);
 </script>

@@ -1,37 +1,68 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
+  PrimaryGeneratedColumn,
   ManyToOne,
-  JoinColumn,
-} from "typeorm";
-import { Vehicle } from "./vehicle.entity";
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { Vehicle } from './vehicle.entity';
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsDate,
+  IsOptional,
+  Min,
+} from 'class-validator';
 
-@Entity("expenses")
+@Entity()
 export class Expense {
+  @ApiProperty({ description: 'The unique identifier of the expense' })
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  vehicleId: number;
-
-  @Column("decimal", { precision: 10, scale: 2 })
-  amount: number;
-
-  @Column()
+  @ApiProperty({ description: 'The date of the expense' })
+  @Column({ type: 'date' })
+  @IsDate()
+  @IsNotEmpty()
   date: Date;
 
+  @ApiProperty({ description: 'The category of the expense' })
   @Column()
+  @IsString()
+  @IsNotEmpty()
   category: string;
 
+  @ApiProperty({ description: 'The amount of the expense' })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  amount: number;
+
+  @ApiProperty({ description: 'Optional note about the expense' })
   @Column({ nullable: true })
+  @IsString()
+  @IsOptional()
   note: string;
 
+  @ApiProperty({ description: 'The vehicle associated with this expense' })
+  @ManyToOne(() => Vehicle, { onDelete: 'CASCADE' })
+  vehicle: Vehicle;
+
+  @ApiProperty({ description: 'The ID of the associated vehicle' })
+  @Column()
+  @IsNumber()
+  @IsNotEmpty()
+  vehicleId: number;
+
+  @ApiProperty({ description: 'When the expense was created' })
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => Vehicle, (vehicle) => vehicle.expenses)
-  @JoinColumn({ name: "vehicleId" })
-  vehicle: Vehicle;
+  @ApiProperty({ description: 'When the expense was last updated' })
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

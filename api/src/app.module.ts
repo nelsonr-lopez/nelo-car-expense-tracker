@@ -1,8 +1,11 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ExpensesModule } from "./modules/expenses/expenses.module";
-import { VehiclesModule } from "./modules/vehicles/vehicles.module";
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Vehicle } from './entities/vehicle.entity';
+import { Expense } from './entities/expense.entity';
+import { VehicleModule } from './modules/vehicle.module';
+import { ExpenseModule } from './modules/expense.module';
+import { RabbitMQModule } from './processor/rabbitmq.module';
 
 @Module({
   imports: [
@@ -15,22 +18,22 @@ import { VehiclesModule } from "./modules/vehicles/vehicles.module";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: "postgres",
-        host: configService.get("POSTGRES_HOST", "localhost"),
-        port: configService.get("POSTGRES_PORT", 5432),
-        username: configService.get("POSTGRES_USER", "postgres"),
-        password: configService.get("POSTGRES_PASSWORD", "postgres"),
-        database: configService.get("POSTGRES_DB", "cab_expenses"),
-        entities: [__dirname + "/**/*.entity{.ts,.js}"],
-        synchronize:
-          configService.get("ENVIRONMENT", "development") === "development",
+        type: 'postgres',
+        host: configService.get('POSTGRES_HOST'),
+        port: configService.get('POSTGRES_PORT'),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
+        entities: [Vehicle, Expense],
+        synchronize: configService.get('ENVIRONMENT') === 'development',
       }),
       inject: [ConfigService],
     }),
 
     // Feature modules
-    ExpensesModule,
-    VehiclesModule,
+    VehicleModule,
+    ExpenseModule,
+    RabbitMQModule,
   ],
 })
 export class AppModule {}

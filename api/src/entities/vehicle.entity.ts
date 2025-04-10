@@ -4,45 +4,59 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { Expense } from "./expense.entity";
-import { ApiProperty } from "@nestjs/swagger";
+  OneToMany,
+} from 'typeorm';
+import { Expense } from './expense.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsNotEmpty, Length } from 'class-validator';
 
-@Entity("vehicles")
+@Entity('vehicles')
 export class Vehicle {
-  @ApiProperty({ description: "The unique identifier of the vehicle" })
+  @ApiProperty({ description: 'The unique identifier of the vehicle' })
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ description: "The make of the vehicle" })
+  @ApiProperty({ description: 'The make of the vehicle' })
   @Column()
+  @IsString()
+  @IsNotEmpty()
   make: string;
 
-  @ApiProperty({ description: "The model of the vehicle" })
+  @ApiProperty({ description: 'The model of the vehicle' })
   @Column()
+  @IsString()
+  @IsNotEmpty()
   model: string;
 
-  @ApiProperty({ description: "The year of the vehicle" })
+  @ApiProperty({ description: 'The year of the vehicle' })
   @Column()
+  @IsNumber()
+  @IsNotEmpty()
   year: number;
 
-  @ApiProperty({ description: "The license plate number of the vehicle" })
+  @ApiProperty({ description: 'The license plate number of the vehicle' })
   @Column({ unique: true })
+  @IsString()
+  @IsNotEmpty()
+  @Length(5, 10)
   licensePlate: string;
 
   @ApiProperty({
-    description: "The VIN (Vehicle Identification Number) of the vehicle",
+    description: 'The VIN (Vehicle Identification Number) of the vehicle',
   })
   @Column({ unique: true })
+  @IsString()
+  @IsNotEmpty()
+  @Length(17, 17)
   vin: string;
 
   @ApiProperty({
-    description: "The date when the vehicle was added to the system",
+    description: 'The date when the vehicle was added to the system',
   })
   @CreateDateColumn()
   createdAt: Date;
 
-  @ApiProperty({ description: "The date when the vehicle was last updated" })
+  @ApiProperty({ description: 'The date when the vehicle was last updated' })
   @UpdateDateColumn()
   updatedAt: Date;
 

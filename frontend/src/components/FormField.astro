@@ -1,0 +1,79 @@
+---
+import type { FormField as FormFieldType } from "../lib/config/expense-form";
+
+interface Props {
+  field: FormFieldType;
+  error?: string;
+}
+
+const { field, error } = Astro.props;
+---
+
+<div class="space-y-2">
+  <label for={field.id} class="text-sm font-medium">
+    {field.label}
+    {field.required && <span class="text-destructive">*</span>}
+  </label>
+
+  {
+    field.type === "select" ? (
+      <select
+        id={field.id}
+        name={field.name}
+        required={field.required}
+        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+      >
+        <option value="">Select {field.label.toLowerCase()}</option>
+        {field.options?.map((option) => (
+          <option value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    ) : field.type === "textarea" ? (
+      <textarea
+        id={field.id}
+        name={field.name}
+        rows="3"
+        required={field.required}
+        placeholder={field.placeholder}
+        class="w-full rounded-md border border-input bg-background px-3 py-2"
+      />
+    ) : field.type === "number" ? (
+      <div class="relative">
+        {field.name === "amount" && (
+          <span class="absolute left-3 top-2.5 text-muted-foreground">$</span>
+        )}
+        <input
+          type="number"
+          id={field.id}
+          name={field.name}
+          required={field.required}
+          min={field.validation?.min}
+          max={field.validation?.max}
+          step="0.01"
+          class={`h-10 w-full rounded-md border border-input bg-background px-3 py-2 ${
+            field.name === "amount" ? "pl-8" : ""
+          }`}
+        />
+      </div>
+    ) : (
+      <input
+        type={
+          field.type as "text" | "date" | "email" | "password" | "tel" | "url"
+        }
+        id={field.id}
+        name={field.name}
+        required={field.required}
+        placeholder={field.placeholder}
+        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+      />
+    )
+  }
+
+  {
+    error ? (
+      <p class="text-xs text-destructive">{error}</p>
+    ) : (
+      <p class="text-xs text-muted-foreground">{field.helperText}</p>
+    )
+  }
+</div>

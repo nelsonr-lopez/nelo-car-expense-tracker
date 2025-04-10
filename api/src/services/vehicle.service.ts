@@ -1,14 +1,14 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Vehicle } from "../entities/vehicle.entity";
-import { CreateVehicleDto, UpdateVehicleDto } from "../dto/vehicle.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Vehicle } from '../entities/vehicle.entity';
+import { CreateVehicleDto, UpdateVehicleDto } from '../dto/vehicle.dto';
 
 @Injectable()
 export class VehicleService {
   constructor(
     @InjectRepository(Vehicle)
-    private vehicleRepository: Repository<Vehicle>
+    private vehicleRepository: Repository<Vehicle>,
   ) {}
 
   async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
@@ -30,7 +30,7 @@ export class VehicleService {
 
   async update(
     id: number,
-    updateVehicleDto: UpdateVehicleDto
+    updateVehicleDto: UpdateVehicleDto,
   ): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
     Object.assign(vehicle, updateVehicleDto);
