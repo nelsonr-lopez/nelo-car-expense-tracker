@@ -186,8 +186,15 @@ describe('ExpenseSeed', () => {
     const error = new Error('Failed to seed vehicles');
     (seedVehicles as jest.Mock).mockRejectedValue(error);
 
+    // Temporarily disable console.error for this test
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+
     await expect(seedExpenses(mockDataSource as DataSource)).rejects.toThrow(
       'Failed to seed vehicles',
     );
+
+    // Restore console.error
+    console.error = originalConsoleError;
   });
 });
