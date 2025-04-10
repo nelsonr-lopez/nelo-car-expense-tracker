@@ -4,18 +4,13 @@ import { getExpenses } from "../lib/api/expenses";
 import { getVehicles } from "../lib/api/vehicles";
 import type { Expense } from "../lib/api/expenses";
 import type { Vehicle } from "../lib/api/vehicles";
+import { formatCurrency, formatVehicleLabel } from "../lib/format";
 
 // Initialize variables
 let expenses: Expense[] = [];
 let vehicles: Vehicle[] = [];
 let error: string | null = null;
 let isLoading = true;
-
-// Format currency function
-function formatCurrency(amount: number | string): string {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return isNaN(num) ? '0.00' : num.toFixed(2);
-}
 
 // Fetch data from API
 try {
@@ -50,7 +45,7 @@ const expensesByVehicle = expenses.reduce((acc, expense) => {
 
 // Get vehicle names
 const vehicleNames = vehicles.reduce((acc, vehicle) => {
-  acc[vehicle.id] = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  acc[vehicle.id] = formatVehicleLabel(vehicle);
   return acc;
 }, {} as Record<string, string>);
 ---
@@ -82,7 +77,7 @@ const vehicleNames = vehicles.reduce((acc, vehicle) => {
         <!-- Total Expenses Card -->
         <div class="rounded-lg border p-6">
           <h2 class="text-lg font-medium">Total Expenses</h2>
-          <p class="mt-2 text-3xl font-bold">${formatCurrency(totalExpenses)}</p>
+          <p class="mt-2 text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
         </div>
 
         <!-- Expenses by Category Card -->
@@ -92,7 +87,7 @@ const vehicleNames = vehicles.reduce((acc, vehicle) => {
             {Object.entries(expensesByCategory).map(([category, amount]) => (
               <div class="flex items-center justify-between">
                 <span class="capitalize">{category}</span>
-                <span class="font-medium">${formatCurrency(amount)}</span>
+                <span class="font-medium">{formatCurrency(amount)}</span>
               </div>
             ))}
           </div>
@@ -105,7 +100,7 @@ const vehicleNames = vehicles.reduce((acc, vehicle) => {
             {Object.entries(expensesByVehicle).map(([vehicleId, amount]) => (
               <div class="flex items-center justify-between">
                 <span>{vehicleNames[vehicleId] || `Vehicle #${vehicleId}`}</span>
-                <span class="font-medium">${formatCurrency(amount)}</span>
+                <span class="font-medium">{formatCurrency(amount)}</span>
               </div>
             ))}
           </div>
@@ -130,7 +125,7 @@ const vehicleNames = vehicles.reduce((acc, vehicle) => {
                     <td class="p-4">{expense.date}</td>
                     <td class="p-4">{vehicleNames[expense.vehicleId] || `Vehicle #${expense.vehicleId}`}</td>
                     <td class="p-4 capitalize">{expense.category}</td>
-                    <td class="p-4">${formatCurrency(expense.amount)}</td>
+                    <td class="p-4">{formatCurrency(expense.amount)}</td>
                   </tr>
                 ))}
               </tbody>
