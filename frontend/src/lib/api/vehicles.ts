@@ -1,19 +1,26 @@
-export interface Vehicle {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  licensePlate: string;
-  vin: string;
-  notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import type {
+  Vehicle,
+  VehicleFilters,
+  VehicleListResponse,
+} from "../../types/vehicle";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
 
-export async function getVehicles(): Promise<Vehicle[]> {
-  const response = await fetch(`${API_URL}/vehicles`);
+export async function getVehicles(
+  filters: VehicleFilters = {}
+): Promise<Vehicle[]> {
+  const searchParams = new URLSearchParams();
+
+  if (filters.search) searchParams.set("search", filters.search);
+  if (filters.make) searchParams.set("make", filters.make);
+  if (filters.model) searchParams.set("model", filters.model);
+  if (filters.year) searchParams.set("year", filters.year.toString());
+  if (filters.page) searchParams.set("page", filters.page.toString());
+  if (filters.limit) searchParams.set("limit", filters.limit.toString());
+
+  const response = await fetch(
+    `${API_URL}/vehicles?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch vehicles");
@@ -78,3 +85,9 @@ export async function deleteVehicle(id: number): Promise<void> {
     throw new Error("Failed to delete vehicle");
   }
 }
+
+export type {
+  Vehicle,
+  VehicleFilters,
+  VehicleListResponse,
+} from "../../types/vehicle";

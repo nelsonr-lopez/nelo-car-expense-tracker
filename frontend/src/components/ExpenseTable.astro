@@ -1,16 +1,10 @@
 ---
-import type { Vehicle } from "../lib/api/vehicles";
+import type { Vehicle } from "../types/vehicle";
+import type { Expense } from "../types/expense";
 import { formatCurrency, formatDate, formatVehicleLabel } from "../lib/format";
 
 interface Props {
-  expenses: Array<{
-    id: number;
-    date: string;
-    vehicleId: number;
-    category: string;
-    amount: number;
-    note: string;
-  }>;
+  expenses: Expense[];
   vehicles: Vehicle[];
 }
 

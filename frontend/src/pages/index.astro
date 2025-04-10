@@ -5,13 +5,17 @@ import Pagination from "../components/Pagination.astro";
 import ExpenseFilters from "../components/ExpenseFilters.astro";
 import { getExpenses } from "../lib/api/expenses";
 import { getVehicles } from "../lib/api/vehicles";
-import type { Expense } from "../lib/api/expenses";
-import type { Vehicle } from "../lib/api/vehicles";
+import type {
+  Expense,
+  ExpenseCategory,
+  ExpenseListResponse,
+} from "../types/expense";
+import type { Vehicle } from "../types/vehicle";
 
 // Get query parameters
 const { searchParams } = Astro.url;
 const page = parseInt(searchParams.get("page") || "1");
-const category = searchParams.get("category") || "";
+const category = (searchParams.get("category") || "") as ExpenseCategory;
 const vehicleId = searchParams.get("vehicleId")
   ? parseInt(searchParams.get("vehicleId") as string, 10)
   : undefined;
@@ -19,12 +23,11 @@ const search = searchParams.get("search") || "";
 const limit = 10;
 
 // Initialize variables
-let expensesResult: { expenses: Expense[]; total: number; totalPages: number } =
-  {
-    expenses: [],
-    total: 0,
-    totalPages: 0,
-  };
+let expensesResult: ExpenseListResponse = {
+  expenses: [],
+  total: 0,
+  totalPages: 0,
+};
 let vehicles: Vehicle[] = [];
 let error: string | null = null;
 
@@ -53,7 +56,7 @@ try {
 }
 
 // Define expense categories
-const categories = [
+const categories: ExpenseCategory[] = [
   "FUEL",
   "MAINTENANCE",
   "REPAIR",

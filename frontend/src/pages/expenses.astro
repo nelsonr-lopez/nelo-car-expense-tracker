@@ -7,13 +7,13 @@ import LoadingSpinner from "../components/LoadingSpinner.astro";
 import ErrorMessage from "../components/ErrorMessage.astro";
 import { getExpenses } from "../lib/api/expenses";
 import { getVehicles } from "../lib/api/vehicles";
-import type { Expense } from "../lib/api/expenses";
-import type { Vehicle } from "../lib/api/vehicles";
+import type { Expense, ExpenseCategory } from "../types/expense";
+import type { Vehicle } from "../types/vehicle";
 
 // Get query parameters
 const { searchParams } = Astro.url;
 const page = parseInt(searchParams.get("page") || "1");
-const category = searchParams.get("category") || "";
+const category = (searchParams.get("category") || "") as ExpenseCategory;
 const vehicleId = searchParams.get("vehicleId")
   ? parseInt(searchParams.get("vehicleId") as string, 10)
   : undefined;
@@ -53,7 +53,7 @@ try {
 }
 
 // Define expense categories
-const categories = [
+const categories: ExpenseCategory[] = [
   "FUEL",
   "MAINTENANCE",
   "REPAIR",

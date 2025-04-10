@@ -1,29 +1,14 @@
-export interface Expense {
-  id: number;
-  date: string;
-  vehicleId: number;
-  category: string;
-  amount: number;
-  note: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface ExpenseFilters {
-  search?: string;
-  category?: string;
-  vehicleId?: number;
-  page?: number;
-  limit?: number;
-}
+import type {
+  Expense,
+  ExpenseFilters,
+  ExpenseListResponse,
+} from "../../types/expense";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
 
-export async function getExpenses(filters: ExpenseFilters = {}): Promise<{
-  expenses: Expense[];
-  total: number;
-  totalPages: number;
-}> {
+export async function getExpenses(
+  filters: ExpenseFilters = {}
+): Promise<ExpenseListResponse> {
   const searchParams = new URLSearchParams();
 
   if (filters.search) searchParams.set("search", filters.search);
@@ -100,3 +85,9 @@ export async function deleteExpense(id: number): Promise<void> {
     throw new Error("Failed to delete expense");
   }
 }
+
+export type {
+  Expense,
+  ExpenseFilters,
+  ExpenseListResponse,
+} from "../../types/expense";
