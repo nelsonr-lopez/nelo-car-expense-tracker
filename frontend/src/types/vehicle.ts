@@ -21,6 +21,7 @@ export interface VehicleFilters {
 
 export interface VehicleListResponse {
   vehicles: Vehicle[];
+  page: number;
+  limit: number;
   total: number;
-  totalPages: number;
 }

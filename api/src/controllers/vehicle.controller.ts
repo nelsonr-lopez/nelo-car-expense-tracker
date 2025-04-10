@@ -9,7 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VehicleService } from '../services/vehicle.service';
-import { CreateVehicleDto, UpdateVehicleDto } from '../dto/vehicle.dto';
+import {
+  CreateVehicleDto,
+  UpdateVehicleDto,
+  VehicleListResponseDto,
+} from '../dto/vehicle.dto';
 import { Vehicle } from '../entities/vehicle.entity';
 
 @ApiTags('vehicles')
@@ -32,10 +36,10 @@ export class VehicleController {
   @ApiOperation({ summary: 'Get all vehicles' })
   @ApiResponse({
     status: 200,
-    description: 'Return all vehicles.',
-    type: [Vehicle],
+    description: 'Return all vehicles with pagination info.',
+    type: VehicleListResponseDto,
   })
-  findAll() {
+  findAll(): Promise<VehicleListResponseDto> {
     return this.vehicleService.findAll();
   }
 

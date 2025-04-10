@@ -1,5 +1,4 @@
 ---
-import type { FormField as FormFieldType } from "../lib/config/expense-form";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
@@ -34,16 +33,6 @@ const {
   step,
   placeholder,
 } = Astro.props;
-
-// Define valid input types
-type InputType =
-  | "text"
-  | "date"
-  | "email"
-  | "password"
-  | "tel"
-  | "url"
-  | "number";
 ---
 
 <div class="space-y-2">
@@ -88,17 +77,42 @@ type InputType =
 </div>
 
 <script>
-  // Initialize select elements
+  // Initialize form fields
   document.addEventListener("DOMContentLoaded", () => {
-    const selectWrappers = document.querySelectorAll(".select-wrapper");
-    selectWrappers.forEach((wrapper) => {
-      const select = wrapper.querySelector("select");
-      if (select) {
-        select.addEventListener("change", (e) => {
-          const target = e.target as HTMLSelectElement;
-          wrapper.setAttribute("data-value", target.value);
-        });
-      }
+    // Handle select elements
+    const selects = document.querySelectorAll("select");
+    selects.forEach((select) => {
+      select.addEventListener("change", (e) => {
+        const target = e.target as HTMLSelectElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+
+    // Handle input elements
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const target = e.target as HTMLInputElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+
+    // Handle textarea elements
+    const textareas = document.querySelectorAll("textarea");
+    textareas.forEach((textarea) => {
+      textarea.addEventListener("input", (e) => {
+        const target = e.target as HTMLTextAreaElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
     });
   });
 </script>

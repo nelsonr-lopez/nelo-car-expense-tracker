@@ -6,7 +6,9 @@ import type {
 } from "../../types/vehicle";
 
 export class VehiclesApiClient extends BaseApiClient {
-  async getVehicles(filters: VehicleFilters = {}): Promise<Vehicle[]> {
+  async getVehicles(
+    filters: VehicleFilters = {}
+  ): Promise<VehicleListResponse> {
     const searchParams = new URLSearchParams();
 
     if (filters.search) searchParams.set("search", filters.search);
@@ -16,7 +18,9 @@ export class VehiclesApiClient extends BaseApiClient {
     if (filters.page) searchParams.set("page", filters.page.toString());
     if (filters.limit) searchParams.set("limit", filters.limit.toString());
 
-    return this.get<Vehicle[]>(`/vehicles?${searchParams.toString()}`);
+    return this.get<VehicleListResponse>(
+      `/vehicles?${searchParams.toString()}`
+    );
   }
 
   async getVehicle(id: number): Promise<Vehicle> {

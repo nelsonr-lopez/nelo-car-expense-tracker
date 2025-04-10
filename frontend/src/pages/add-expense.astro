@@ -1,31 +1,25 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { vehiclesApi } from "../lib/api/vehicles";
-import type { Vehicle } from "../types/vehicle";
-import type { ExpenseCategory } from "../types/expense";
 import FormField from "../components/FormField.astro";
-import ErrorMessage from "../components/ErrorMessage.astro";
+import { vehiclesApi } from "../lib/api/vehicles";
+import { expensesApi } from "../lib/api/expenses";
 import { handleApiError } from "../lib/error-handling";
-import { getExpenseFormConfig } from "../lib/config/expense-form";
+import type { ExpenseCategory } from "../types/expense";
+import type { Vehicle, VehicleListResponse } from "../types/vehicle";
 
 // Initialize variables
 let vehicles: Vehicle[] = [];
 let error: string | null = null;
-let isLoading = true;
-let formSections: ReturnType<typeof getExpenseFormConfig> = [];
 
-// Fetch vehicles from API
 try {
-  vehicles = await vehiclesApi.getVehicles();
-  formSections = getExpenseFormConfig(vehicles);
-  isLoading = false;
+  const vehiclesData = await vehiclesApi.getVehicles();
+  vehicles = vehiclesData.vehicles || [];
 } catch (e) {
-  const apiError = handleApiError(e);
-  error = apiError.message;
-  isLoading = false;
-  console.error("Error fetching vehicles:", apiError);
+  console.error("Error fetching vehicles:", e);
+  error = "Failed to load vehicles. Please try again later.";
 }
 
+// Define expense categories
 const categories: ExpenseCategory[] = [
   "FUEL",
   "MAINTENANCE",
@@ -37,153 +31,130 @@ const categories: ExpenseCategory[] = [
 ---
 
 <Layout title="Add Expense">
-  <div class="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Add Expense</h1>
-        <p class="mt-2 text-sm text-muted-foreground">
-          Fill out the form below to add a new expense record.
-        </p>
-      </div>
+  <main class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Add Expense</h1>
       <a
-        href="/expenses"
-        class="inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-muted"
+        href="/"
+        class="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md"
       >
-        Back to Expenses
+        Back to List
       </a>
     </div>
-
     {
-      isLoading ? (
-        <div class="py-12 text-center">
-          <p class="text-muted-foreground">Loading form...</p>
+      error ? (
+        <div class="rounded-md bg-destructive/15 p-4 text-destructive mb-6">
+          <p>{error}</p>
         </div>
-      ) : error ? (
-        <ErrorMessage message={error} retry={true} />
       ) : (
-        <form id="expense-form" class="space-y-8">
-          <div class="space-y-6">
-            <FormField
-              label="Date"
-              name="date"
-              type="date"
-              required={true}
-              value={new Date().toISOString().split("T")[0]}
-            />
-
-            <FormField
-              label="Vehicle"
-              name="vehicleId"
-              type="select"
-              required={true}
-            >
-              <option value="">Select a vehicle</option>
-              {vehicles.map((vehicle) => (
-                <option value={vehicle.id}>
-                  {vehicle.year} {vehicle.make} {vehicle.model} (
-                  {vehicle.licensePlate})
-                </option>
-              ))}
-            </FormField>
-
-            <FormField
-              label="Category"
-              name="category"
-              type="select"
-              required={true}
-            >
-              <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option value={category}>{category}</option>
-              ))}
-            </FormField>
-
-            <FormField
-              label="Amount"
-              name="amount"
-              type="number"
-              required={true}
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-            />
-
-            <FormField
-              label="Note"
-              name="note"
-              type="textarea"
-              placeholder="Add any additional details..."
-            />
-          </div>
-
-          <div class="flex justify-end space-x-4">
-            <button
-              type="button"
-              class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow-sm hover:bg-destructive/90"
-              onclick="window.location.href='/expenses'"
-            >
-              Cancel
-            </button>
+        <form
+          id="expense-form"
+          class="max-w-2xl mx-auto space-y-6"
+          data-vehicles={JSON.stringify(vehicles)}
+          data-categories={JSON.stringify(categories)}
+        >
+          <FormField
+            label="Date"
+            name="date"
+            type="date"
+            required
+            value={new Date().toISOString().split("T")[0]}
+          />
+          <FormField label="Vehicle" name="vehicleId" type="select" required>
+            <option value="">Select a vehicle</option>
+            {vehicles.map((vehicle) => (
+              <option value={vehicle.id}>
+                {vehicle.year} {vehicle.make} {vehicle.model} (
+                {vehicle.licensePlate})
+              </option>
+            ))}
+          </FormField>
+          <FormField label="Category" name="category" type="select" required>
+            <option value="">Select a category</option>
+            {categories.map((category) => (
+              <option value={category}>{category}</option>
+            ))}
+          </FormField>
+          <FormField
+            label="Amount"
+            name="amount"
+            type="number"
+            required
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+          />
+          <FormField
+            label="Note"
+            name="note"
+            type="textarea"
+            placeholder="Add a note about this expense..."
+          />
+          <div class="flex justify-end">
             <button
               type="submit"
-              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+              class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
             >
-              Save Expense
+              Add Expense
             </button>
           </div>
         </form>
       )
     }
-  </div>
-
-  <script>
-    import { expensesApi } from "../lib/api/expenses";
-    import { handleApiError, getValidationErrors } from "../lib/error-handling";
-    import type { ExpenseCategory } from "../types/expense";
-
-    const form = document.getElementById("expense-form");
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        try {
-          const formData = new FormData(form as HTMLFormElement);
-          const data = {
-            date: formData.get("date") as string,
-            vehicleId: parseInt(formData.get("vehicleId") as string, 10),
-            category: formData.get("category") as ExpenseCategory,
-            amount: parseFloat(formData.get("amount") as string),
-            note: formData.get("note") as string,
-          };
-
-          await expensesApi.createExpense(data);
-          window.location.href = "/expenses";
-        } catch (error) {
-          const apiError = handleApiError(error);
-          const validationErrors = getValidationErrors(apiError);
-
-          if (validationErrors) {
-            // Handle validation errors
-            Object.entries(validationErrors).forEach(([field, errors]) => {
-              const input = form.querySelector(`[name="${field}"]`);
-              if (input) {
-                input.classList.add("border-destructive");
-                const errorDiv = document.createElement("div");
-                errorDiv.className = "text-sm text-destructive mt-1";
-                errorDiv.textContent = errors[0];
-                input.parentNode?.appendChild(errorDiv);
-              }
-            });
-          } else {
-            // Show general error message
-            const errorDiv = document.createElement("div");
-            errorDiv.className =
-              "rounded-md bg-destructive/15 p-4 text-destructive mb-6";
-            errorDiv.textContent = apiError.message;
-            form.insertBefore(errorDiv, form.firstChild);
-          }
-        }
-      });
-    }
-  </script>
+  </main>
 </Layout>
+
+<script>
+  import type { Vehicle } from "../types/vehicle";
+  import type { ExpenseCategory } from "../types/expense";
+  import { expensesApi } from "../lib/api/expenses";
+
+  // Handle form submission
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById(
+      "expense-form"
+    ) as HTMLFormElement | null;
+    if (!form) return;
+
+    // Get data from form attributes
+    const vehiclesData = JSON.parse(form.dataset.vehicles || "[]") as Vehicle[];
+    const categoriesData = JSON.parse(
+      form.dataset.categories || "[]"
+    ) as ExpenseCategory[];
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitButton = form.querySelector(
+        'button[type="submit"]'
+      ) as HTMLButtonElement;
+      if (!submitButton) return;
+
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Adding...";
+
+        const formData = new FormData(form);
+        const data = {
+          date: formData.get("date") as string,
+          vehicleId: parseInt(formData.get("vehicleId") as string, 10),
+          category: formData.get("category") as ExpenseCategory,
+          amount: parseFloat(formData.get("amount") as string),
+          note: formData.get("note") as string,
+        };
+
+        await expensesApi.createExpense(data);
+
+        // Redirect to the expense list
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Error adding expense:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        alert(errorMessage);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Add Expense";
+      }
+    });
+  });
+</script>

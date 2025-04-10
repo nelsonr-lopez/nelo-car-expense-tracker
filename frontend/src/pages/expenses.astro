@@ -45,7 +45,7 @@ try {
   expenses = expensesResult.expenses;
   total = expensesResult.total;
   totalPages = expensesResult.totalPages;
-  vehicles = vehiclesData;
+  vehicles = vehiclesData.vehicles || [];
 
   isLoading = false;
 } catch (e) {
@@ -89,7 +89,7 @@ const categories: ExpenseCategory[] = [
         <div class="rounded-lg border">
           <ExpenseFilters
             categories={categories}
-            vehicles={vehicles}
+            vehicles={vehicles || []}
             initialSearch={search}
             initialCategory={category}
             initialVehicleId={vehicleId}
@@ -103,7 +103,7 @@ const categories: ExpenseCategory[] = [
             </div>
           ) : (
             <>
-              <ExpenseTable expenses={expenses} vehicles={vehicles} />
+              <ExpenseTable expenses={expenses} vehicles={vehicles || []} />
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}

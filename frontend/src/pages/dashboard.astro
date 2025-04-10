@@ -23,7 +23,7 @@ try {
   ]);
   
   expenses = expensesResult.expenses;
-  vehicles = vehiclesData;
+  vehicles = vehiclesData.vehicles || [];
   
   isLoading = false;
 } catch (e) {
@@ -64,10 +64,20 @@ const expensesByVehicle = expenses.reduce((acc, expense) => {
 }, {} as Record<string, number>);
 
 // Get vehicle names
-const vehicleNames = vehicles.reduce((acc, vehicle) => {
-  acc[vehicle.id] = formatVehicleLabel(vehicle);
-  return acc;
-}, {} as Record<string, string>);
+const vehicleNames = vehicles && vehicles.length > 0 
+  ? vehicles.reduce((acc, vehicle) => {
+      acc[vehicle.id] = formatVehicleLabel(vehicle);
+      return acc;
+    }, {} as Record<string, string>)
+  : {} as Record<string, string>;
+
+try {
+  const vehiclesData = await vehiclesApi.getVehicles();
+  vehicles = vehiclesData.vehicles || [];
+} catch (e) {
+  console.error('Error fetching vehicles:', e);
+  error = 'Failed to load vehicles. Please try again later.';
+}
 ---
 
 <Layout title="Dashboard">

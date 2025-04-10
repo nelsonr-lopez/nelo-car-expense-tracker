@@ -1,5 +1,6 @@
 ---
-import type { Vehicle } from "../lib/api/vehicles";
+import type { Vehicle } from "../types/vehicle";
+import { formatVehicleLabel } from "../lib/format";
 
 interface Props {
   initialSearch?: string;
@@ -16,10 +17,6 @@ const {
   initialVehicleId,
   vehicles,
 } = Astro.props;
-
-const formatVehicleLabel = (vehicle: Vehicle) => {
-  return `${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`;
-};
 ---
 
 <form id="filters" class="p-4 border-b space-y-4">
@@ -99,18 +96,21 @@ const formatVehicleLabel = (vehicle: Vehicle) => {
     e.preventDefault();
     const params = new URLSearchParams(window.location.search);
 
+    // Update search parameter
     if (searchInput.value) {
       params.set("search", searchInput.value);
     } else {
       params.delete("search");
     }
 
+    // Update category parameter
     if (categorySelect.value) {
       params.set("category", categorySelect.value);
     } else {
       params.delete("category");
     }
 
+    // Update vehicle parameter
     if (vehicleSelect.value) {
       params.set("vehicleId", vehicleSelect.value);
     } else {
@@ -118,8 +118,9 @@ const formatVehicleLabel = (vehicle: Vehicle) => {
     }
 
     // Reset to page 1 when filters change
-    params.delete("page");
+    params.set("page", "1");
 
+    // Update URL
     window.location.search = params.toString();
   });
 </script>

@@ -11,7 +11,7 @@ import type {
   ExpenseCategory,
   ExpenseListResponse,
 } from "../types/expense";
-import type { Vehicle } from "../types/vehicle";
+import type { Vehicle, VehicleListResponse } from "../types/vehicle";
 
 // Get query parameters
 const { searchParams } = Astro.url;
@@ -46,7 +46,7 @@ try {
   ]);
 
   expensesResult = expensesData;
-  vehicles = vehiclesData;
+  vehicles = vehiclesData.vehicles || [];
 
   // Log data for debugging
   console.log("Vehicles fetched:", vehicles);
@@ -110,64 +110,74 @@ const categories: ExpenseCategory[] = [
 
 <script>
   // Handle pagination and filters
-  const form = document.getElementById("filters") as HTMLFormElement;
-  const searchInput = document.getElementById("search") as HTMLInputElement;
-  const categorySelect = document.getElementById(
-    "category"
-  ) as HTMLSelectElement;
-  const vehicleSelect = document.getElementById(
-    "vehicleId"
-  ) as HTMLSelectElement;
-  const prevButton = document.querySelector(
-    "button:first-of-type"
-  ) as HTMLButtonElement;
-  const nextButton = document.querySelector(
-    "button:last-of-type"
-  ) as HTMLButtonElement;
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("filters") as HTMLFormElement | null;
+    const searchInput = document.getElementById(
+      "search"
+    ) as HTMLInputElement | null;
+    const categorySelect = document.getElementById(
+      "category"
+    ) as HTMLSelectElement | null;
+    const vehicleSelect = document.getElementById(
+      "vehicleId"
+    ) as HTMLSelectElement | null;
+    const prevButton = document.querySelector(
+      ".pagination-prev"
+    ) as HTMLButtonElement | null;
+    const nextButton = document.querySelector(
+      ".pagination-next"
+    ) as HTMLButtonElement | null;
 
-  // Handle form submission
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(window.location.search);
+    // Handle form submission
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams(window.location.search);
 
-    if (searchInput.value) {
-      params.set("search", searchInput.value);
-    } else {
-      params.delete("search");
+        if (searchInput && searchInput.value) {
+          params.set("search", searchInput.value);
+        } else {
+          params.delete("search");
+        }
+
+        if (categorySelect && categorySelect.value) {
+          params.set("category", categorySelect.value);
+        } else {
+          params.delete("category");
+        }
+
+        if (vehicleSelect && vehicleSelect.value) {
+          params.set("vehicleId", vehicleSelect.value);
+        } else {
+          params.delete("vehicleId");
+        }
+
+        // Reset to page 1 when filters change
+        params.set("page", "1");
+
+        window.location.search = params.toString();
+      });
     }
 
-    if (categorySelect.value) {
-      params.set("category", categorySelect.value);
-    } else {
-      params.delete("category");
+    // Handle pagination
+    if (prevButton) {
+      prevButton.addEventListener("click", () => {
+        if (prevButton.disabled) return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentPage = parseInt(searchParams.get("page") || "1");
+        searchParams.set("page", (currentPage - 1).toString());
+        window.location.search = searchParams.toString();
+      });
     }
 
-    if (vehicleSelect.value) {
-      params.set("vehicleId", vehicleSelect.value);
-    } else {
-      params.delete("vehicleId");
+    if (nextButton) {
+      nextButton.addEventListener("click", () => {
+        if (nextButton.disabled) return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentPage = parseInt(searchParams.get("page") || "1");
+        searchParams.set("page", (currentPage + 1).toString());
+        window.location.search = searchParams.toString();
+      });
     }
-
-    // Reset to page 1 when filters change
-    params.delete("page");
-
-    window.location.search = params.toString();
-  });
-
-  // Handle pagination
-  prevButton.addEventListener("click", () => {
-    if (prevButton.disabled) return;
-    const searchParams = new URLSearchParams(window.location.search);
-    const currentPage = parseInt(searchParams.get("page") || "1");
-    searchParams.set("page", (currentPage - 1).toString());
-    window.location.search = searchParams.toString();
-  });
-
-  nextButton.addEventListener("click", () => {
-    if (nextButton.disabled) return;
-    const searchParams = new URLSearchParams(window.location.search);
-    const currentPage = parseInt(searchParams.get("page") || "1");
-    searchParams.set("page", (currentPage + 1).toString());
-    window.location.search = searchParams.toString();
   });
 </script>
