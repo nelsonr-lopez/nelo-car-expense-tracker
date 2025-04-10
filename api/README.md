@@ -22,17 +22,68 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# Nelo Corp Expense Tracker API
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A robust backend API for managing vehicle expenses and tracking corporate fleet costs built with NestJS.
+
+## Features
+
+- Vehicle Management
+
+  - Create, read, update, and delete vehicle records
+  - Track vehicle details (make, model, year, license plate, VIN)
+  - Automatic timestamp management for creation and updates
+
+- Expense Tracking
+
+  - Record and manage vehicle-related expenses
+  - Categorize expenses for better organization
+  - Filter expenses by date, category, and vehicle
+  - Generate expense summaries and reports
+  - Monthly and vehicle-specific expense analysis
+
+- Real-time Processing
+  - RabbitMQ integration for asynchronous expense processing
+  - Efficient handling of expense calculations and summaries
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- PostgreSQL
+- RabbitMQ
 
 ## Installation
+
+1. Clone the repository
+2. Install dependencies:
 
 ```bash
 $ npm install
 ```
 
-## Running the app
+3. Set up environment variables:
+   Create a `.env` file in the root directory with the following variables:
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+DB_DATABASE=expense_tracker
+
+# RabbitMQ
+RABBITMQ_URL=amqp://localhost:5672
+RABBITMQ_QUEUE=expense_queue
+```
+
+4. Initialize the database:
+
+```bash
+$ ./scripts/init-db.sh
+```
+
+## Running the Application
 
 ```bash
 # development
@@ -45,7 +96,15 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+## API Documentation
+
+Once the application is running, you can access the Swagger API documentation at:
+
+```
+http://localhost:3000/api
+```
+
+## Testing
 
 ```bash
 # unit tests
@@ -58,6 +117,22 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Project Structure
+
+```
+src/
+├── controllers/     # API endpoints
+├── services/        # Business logic
+├── entities/        # Database models
+├── dto/            # Data Transfer Objects
+├── processor/      # Expense processing logic
+└── scripts/        # Database initialization scripts
+```
+
+## License
+
+This project is [MIT licensed](LICENSE).
+
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
@@ -67,7 +142,3 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 - Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
