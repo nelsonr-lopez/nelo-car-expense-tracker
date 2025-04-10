@@ -1,110 +1,183 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import ExpenseTable from "../components/ExpenseTable.astro";
+import Pagination from "../components/Pagination.astro";
+import ExpenseFilters from "../components/ExpenseFilters.astro";
+import { expensesApi } from "../lib/api/expenses";
+import { vehiclesApi } from "../lib/api/vehicles";
+import { handleApiError } from "../lib/error-handling";
+import type {
+  Expense,
+  ExpenseCategory,
+  ExpenseListResponse,
+} from "../types/expense";
+import type { Vehicle, VehicleListResponse } from "../types/vehicle";
+
+// Get query parameters
+const { searchParams } = Astro.url;
+const page = parseInt(searchParams.get("page") || "1");
+const category = (searchParams.get("category") || "") as ExpenseCategory;
+const vehicleId = searchParams.get("vehicleId")
+  ? parseInt(searchParams.get("vehicleId") as string, 10)
+  : undefined;
+const search = searchParams.get("search") || "";
+const limit = 10;
+
+// Initialize variables
+let expensesResult: ExpenseListResponse = {
+  expenses: [],
+  total: 0,
+  totalPages: 0,
+};
+let vehicles: Vehicle[] = [];
+let error: string | null = null;
+
+try {
+  // Fetch data
+  const [expensesData, vehiclesData] = await Promise.all([
+    expensesApi.getExpenses({
+      page,
+      limit,
+      category,
+      vehicleId,
+      search,
+    }),
+    vehiclesApi.getVehicles(),
+  ]);
+
+  expensesResult = expensesData;
+  vehicles = vehiclesData.vehicles || [];
+
+  // Log data for debugging
+  console.log("Vehicles fetched:", vehicles);
+  console.log("Expenses fetched:", expensesResult);
+} catch (e) {
+  console.error("Error fetching data:", e);
+  error = e instanceof Error ? e.message : "An unknown error occurred";
+}
+
+// Define expense categories
+const categories: ExpenseCategory[] = [
+  "FUEL",
+  "MAINTENANCE",
+  "REPAIR",
+  "INSURANCE",
+  "TAX",
+  "OTHER",
+];
 ---
 
-<Layout title="Vehicle Expense Tracker">
-  <div
-    class="flex flex-col items-center justify-center space-y-8 py-12 text-center"
-  >
-    <h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-      Vehicle Expense Tracker
-    </h1>
-    <p class="max-w-2xl text-lg text-muted-foreground">
-      Track and manage your vehicle expenses in one place. Monitor fuel costs,
-      maintenance, insurance, and more.
-    </p>
-    <div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+<Layout title="Expense Tracker">
+  <main class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Expense Tracker</h1>
       <a
-        href="/dashboard"
-        class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 py-2 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        href="/add-expense"
+        class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
       >
-        View Dashboard
-      </a>
-      <a
-        href="/expenses"
-        class="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-6 py-2 text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-      >
-        Manage Expenses
+        Add Expense
       </a>
     </div>
-  </div>
-
-  <div class="grid gap-8 py-12 md:grid-cols-3">
-    <div class="rounded-lg border p-6">
-      <div
-        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-          ></path>
-        </svg>
-      </div>
-      <h2 class="mb-2 text-xl font-semibold">Track Expenses</h2>
-      <p class="text-muted-foreground">
-        Easily record and categorize all your vehicle-related expenses in one
-        place.
-      </p>
-    </div>
-
-    <div class="rounded-lg border p-6">
-      <div
-        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          ></path>
-        </svg>
-      </div>
-      <h2 class="mb-2 text-xl font-semibold">Analyze Costs</h2>
-      <p class="text-muted-foreground">
-        Get insights into your spending patterns with detailed reports and
-        analytics.
-      </p>
-    </div>
-
-    <div class="rounded-lg border p-6">
-      <div
-        class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      </div>
-      <h2 class="mb-2 text-xl font-semibold">Save Time</h2>
-      <p class="text-muted-foreground">
-        Streamline your expense management process and focus on what matters
-        most.
-      </p>
-    </div>
-  </div>
+    {
+      error ? (
+        <div class="rounded-md bg-destructive/15 p-4 text-destructive mb-6">
+          <p>{error}</p>
+        </div>
+      ) : (
+        <div class="rounded-lg border">
+          <ExpenseFilters
+            categories={categories}
+            vehicles={vehicles}
+            initialSearch={search}
+            initialCategory={category}
+            initialVehicleId={vehicleId}
+          />
+          <ExpenseTable
+            expenses={expensesResult.expenses}
+            vehicles={vehicles}
+          />
+          <Pagination
+            currentPage={page}
+            totalPages={expensesResult.totalPages}
+            totalItems={expensesResult.total}
+            itemsPerPage={limit}
+          />
+        </div>
+      )
+    }
+  </main>
 </Layout>
+
+<script>
+  // Handle pagination and filters
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("filters") as HTMLFormElement | null;
+    const searchInput = document.getElementById(
+      "search"
+    ) as HTMLInputElement | null;
+    const categorySelect = document.getElementById(
+      "category"
+    ) as HTMLSelectElement | null;
+    const vehicleSelect = document.getElementById(
+      "vehicleId"
+    ) as HTMLSelectElement | null;
+    const prevButton = document.querySelector(
+      ".pagination-prev"
+    ) as HTMLButtonElement | null;
+    const nextButton = document.querySelector(
+      ".pagination-next"
+    ) as HTMLButtonElement | null;
+
+    // Handle form submission
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams(window.location.search);
+
+        if (searchInput && searchInput.value) {
+          params.set("search", searchInput.value);
+        } else {
+          params.delete("search");
+        }
+
+        if (categorySelect && categorySelect.value) {
+          params.set("category", categorySelect.value);
+        } else {
+          params.delete("category");
+        }
+
+        if (vehicleSelect && vehicleSelect.value) {
+          params.set("vehicleId", vehicleSelect.value);
+        } else {
+          params.delete("vehicleId");
+        }
+
+        // Reset to page 1 when filters change
+        params.set("page", "1");
+
+        window.location.search = params.toString();
+      });
+    }
+
+    // Handle pagination
+    if (prevButton) {
+      prevButton.addEventListener("click", () => {
+        if (prevButton.disabled) return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentPage = parseInt(searchParams.get("page") || "1");
+        searchParams.set("page", (currentPage - 1).toString());
+        window.location.search = searchParams.toString();
+      });
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener("click", () => {
+        if (nextButton.disabled) return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const currentPage = parseInt(searchParams.get("page") || "1");
+        searchParams.set("page", (currentPage + 1).toString());
+        window.location.search = searchParams.toString();
+      });
+    }
+  });
+</script>

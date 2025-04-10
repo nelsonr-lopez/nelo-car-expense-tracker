@@ -1,79 +1,132 @@
 ---
-import type { FormField as FormFieldType } from "../lib/config/expense-form";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface Props {
-  field: FormFieldType;
-  error?: string;
+  label: string;
+  name: string;
+  type: "text" | "number" | "date" | "select" | "textarea";
+  required?: boolean;
+  value?: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  placeholder?: string;
 }
 
-const { field, error } = Astro.props;
+const {
+  label,
+  name,
+  type,
+  required = false,
+  value = "",
+  min,
+  max,
+  step,
+  placeholder,
+} = Astro.props;
 ---
 
 <div class="space-y-2">
-  <label for={field.id} class="text-sm font-medium">
-    {field.label}
-    {field.required && <span class="text-destructive">*</span>}
+  <label for={name} class="block text-sm font-medium text-foreground">
+    {label}
+    {required && <span class="text-destructive">*</span>}
   </label>
 
   {
-    field.type === "select" ? (
-      <select
-        id={field.id}
-        name={field.name}
-        required={field.required}
-        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-      >
-        <option value="">Select {field.label.toLowerCase()}</option>
-        {field.options?.map((option) => (
-          <option value={option.value}>{option.label}</option>
-        ))}
-      </select>
-    ) : field.type === "textarea" ? (
+    type === "textarea" ? (
       <textarea
-        id={field.id}
-        name={field.name}
-        rows="3"
-        required={field.required}
-        placeholder={field.placeholder}
-        class="w-full rounded-md border border-input bg-background px-3 py-2"
+        id={name}
+        name={name}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        required={required}
+        placeholder={placeholder}
       />
-    ) : field.type === "number" ? (
-      <div class="relative">
-        {field.name === "amount" && (
-          <span class="absolute left-3 top-2.5 text-muted-foreground">$</span>
-        )}
-        <input
-          type="number"
-          id={field.id}
-          name={field.name}
-          required={field.required}
-          min={field.validation?.min}
-          max={field.validation?.max}
-          step="0.01"
-          class={`h-10 w-full rounded-md border border-input bg-background px-3 py-2 ${
-            field.name === "amount" ? "pl-8" : ""
-          }`}
-        />
-      </div>
+    ) : type === "select" ? (
+      <select
+        id={name}
+        name={name}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        required={required}
+      >
+        <slot />
+      </select>
     ) : (
       <input
-        type={
-          field.type as "text" | "date" | "email" | "password" | "tel" | "url"
-        }
-        id={field.id}
-        name={field.name}
-        required={field.required}
-        placeholder={field.placeholder}
-        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+        type={type}
+        id={name}
+        name={name}
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        required={required}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       />
-    )
-  }
-
-  {
-    error ? (
-      <p class="text-xs text-destructive">{error}</p>
-    ) : (
-      <p class="text-xs text-muted-foreground">{field.helperText}</p>
     )
   }
 </div>
+
+<script>
+  // Initialize form fields
+  document.addEventListener("DOMContentLoaded", () => {
+    // Handle select elements
+    const selects = document.querySelectorAll("select");
+    selects.forEach((select) => {
+      select.addEventListener("change", (e) => {
+        const target = e.target as HTMLSelectElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+
+    // Handle input elements
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const target = e.target as HTMLInputElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+
+    // Handle textarea elements
+    const textareas = document.querySelectorAll("textarea");
+    textareas.forEach((textarea) => {
+      textarea.addEventListener("input", (e) => {
+        const target = e.target as HTMLTextAreaElement;
+        const form = target.closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .select-wrapper {
+    position: relative;
+  }
+  .select-wrapper select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+</style>

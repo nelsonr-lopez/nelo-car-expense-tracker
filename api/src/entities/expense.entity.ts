@@ -59,8 +59,11 @@ export class Expense {
   note: string;
 
   @ApiProperty({ description: 'The vehicle associated with this expense' })
-  @ManyToOne(() => Vehicle, { onDelete: 'CASCADE' })
-  vehicle: Vehicle;
+  @ManyToOne(() => Vehicle, (vehicle) => vehicle.expenses, {
+    onDelete: 'CASCADE',
+    lazy: true,
+  })
+  vehicle: Promise<Vehicle>;
 
   @ApiProperty({ description: 'The ID of the associated vehicle' })
   @Column()

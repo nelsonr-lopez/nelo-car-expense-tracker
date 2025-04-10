@@ -2,7 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vehicle } from '../entities/vehicle.entity';
-import { CreateVehicleDto, UpdateVehicleDto } from '../dto/vehicle.dto';
+import {
+  CreateVehicleDto,
+  UpdateVehicleDto,
+  VehicleListResponseDto,
+} from '../dto/vehicle.dto';
 
 @Injectable()
 export class VehicleService {
@@ -16,8 +20,14 @@ export class VehicleService {
     return await this.vehicleRepository.save(vehicle);
   }
 
-  async findAll(): Promise<Vehicle[]> {
-    return await this.vehicleRepository.find();
+  async findAll(): Promise<VehicleListResponseDto> {
+    const [vehicles, total] = await this.vehicleRepository.findAndCount();
+    return {
+      vehicles,
+      page: 1,
+      limit: 10,
+      total,
+    };
   }
 
   async findOne(id: number): Promise<Vehicle> {

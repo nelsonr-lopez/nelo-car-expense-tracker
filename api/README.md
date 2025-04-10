@@ -33,6 +33,7 @@ A robust backend API for managing vehicle expenses and tracking corporate fleet 
   - Create, read, update, and delete vehicle records
   - Track vehicle details (make, model, year, license plate, VIN)
   - Automatic timestamp management for creation and updates
+  - Database seeding for initial vehicle data
 
 - Expense Tracking
 
@@ -66,21 +67,25 @@ $ npm install
 
 ```env
 # Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-DB_DATABASE=expense_tracker
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=your_username
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=cab_expense_tracker
 
 # RabbitMQ
 RABBITMQ_URL=amqp://localhost:5672
 RABBITMQ_QUEUE=expense_queue
 ```
 
-4. Initialize the database:
+4. Initialize and seed the database:
 
 ```bash
-$ ./scripts/init-db.sh
+# Run database migrations (if any)
+$ npm run typeorm migration:run
+
+# Seed the database with initial data
+$ npm run seed
 ```
 
 ## Running the Application
@@ -117,17 +122,46 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+The test suite includes:
+
+- Unit tests for core business logic
+- Integration tests for database operations
+- Seeding functionality tests
+- API endpoint tests
+- RabbitMQ integration tests
+
 ## Project Structure
 
 ```
 src/
 ├── controllers/     # API endpoints
-├── services/        # Business logic
-├── entities/        # Database models
+├── services/       # Business logic
+├── entities/       # Database models
 ├── dto/            # Data Transfer Objects
 ├── processor/      # Expense processing logic
+├── database/       # Database configuration and seeds
+│   ├── seeds/     # Seed data for initial setup
+│   └── migrations/ # Database migrations
 └── scripts/        # Database initialization scripts
 ```
+
+## Database Seeding
+
+The application includes a seeding mechanism to populate the database with initial data:
+
+- **Vehicle Seeds**: Includes a set of 10 predefined vehicles with:
+  - TLC-format license plates
+  - Various makes and models
+  - Unique VIN numbers
+  - Vehicle-specific notes
+
+To run seeds manually:
+
+```bash
+$ npm run seed
+```
+
+Seeds will automatically check for existing data to prevent duplication.
 
 ## License
 

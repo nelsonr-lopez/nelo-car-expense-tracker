@@ -1,0 +1,24 @@
+{
+  "name": "nelo-corp-expense-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "test": "npm run test:api && npm run test:frontend",
+    "test:api": "cd api && npm test",
+    "test:frontend": "cd frontend && npm test -- --run",
+    "test:api:watch": "cd api && npm run test:watch",
+    "test:frontend:watch": "cd frontend && npm test -- --watch",
+    "lint": "npm run lint:api && npm run lint:frontend",
+    "lint:api": "cd api && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint"
+  },
+  "lint-staged": {
+    "api/**/*.{js,ts}": [
+      "cd api && npm run lint"
+    ],
+    "frontend/**/*.{js,ts,tsx,astro}": [
+      "cd frontend && npm run lint"
+    ]
+  }
+}

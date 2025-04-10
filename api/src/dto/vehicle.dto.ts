@@ -1,35 +1,51 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsNotEmpty, Length } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, IsOptional } from 'class-validator';
+import { Vehicle } from '../entities/vehicle.entity';
 
 export class CreateVehicleDto {
-  @ApiProperty({ description: 'The make of the vehicle' })
+  @ApiProperty({ example: 'Toyota' })
   @IsString()
   @IsNotEmpty()
   make: string;
 
-  @ApiProperty({ description: 'The model of the vehicle' })
+  @ApiProperty({ example: 'Camry' })
   @IsString()
   @IsNotEmpty()
   model: string;
 
-  @ApiProperty({ description: 'The year of the vehicle' })
+  @ApiProperty({ example: 2020 })
   @IsNumber()
   @IsNotEmpty()
   year: number;
 
-  @ApiProperty({ description: 'The license plate number of the vehicle' })
+  @ApiProperty({ example: 'ABC123' })
   @IsString()
   @IsNotEmpty()
-  @Length(1, 20)
   licensePlate: string;
 
-  @ApiProperty({
-    description: 'The VIN (Vehicle Identification Number) of the vehicle',
-  })
+  @ApiProperty({ example: '1HGCM82633A123456' })
   @IsString()
-  @IsNotEmpty()
-  @Length(17, 17)
-  vin: string;
+  @IsOptional()
+  vin?: string;
+
+  @ApiProperty({ example: 'Company sedan - Sales team' })
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
 
 export class UpdateVehicleDto extends CreateVehicleDto {}
+
+export class VehicleListResponseDto {
+  @ApiProperty({ type: [Vehicle] })
+  vehicles: Vehicle[];
+
+  @ApiProperty({ example: 1 })
+  page: number;
+
+  @ApiProperty({ example: 10 })
+  limit: number;
+
+  @ApiProperty({ example: 5 })
+  total: number;
+}

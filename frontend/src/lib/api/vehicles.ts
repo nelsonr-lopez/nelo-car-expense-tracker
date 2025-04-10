@@ -1,77 +1,56 @@
-export interface Vehicle {
-  id: string;
-  name: string;
-  make: string;
-  model: string;
-  year: number;
-  licensePlate: string;
+import { BaseApiClient } from "../api-client/base";
+import type {
+  Vehicle,
+  VehicleFilters,
+  VehicleListResponse,
+} from "../../types/vehicle";
+
+export class VehiclesApiClient extends BaseApiClient {
+  async getVehicles(
+    filters: VehicleFilters = {}
+  ): Promise<VehicleListResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (filters.search) searchParams.set("search", filters.search);
+    if (filters.make) searchParams.set("make", filters.make);
+    if (filters.model) searchParams.set("model", filters.model);
+    if (filters.year) searchParams.set("year", filters.year.toString());
+    if (filters.page) searchParams.set("page", filters.page.toString());
+    if (filters.limit) searchParams.set("limit", filters.limit.toString());
+
+    return this.get<VehicleListResponse>(
+      `/vehicles?${searchParams.toString()}`
+    );
+  }
+
+  async getVehicle(id: number): Promise<Vehicle> {
+    return this.get<Vehicle>(`/vehicles/${id}`);
+  }
+
+  async createVehicle(
+    data: Omit<Vehicle, "id" | "createdAt" | "updatedAt">
+  ): Promise<Vehicle> {
+    return this.post<Vehicle>("/vehicles", data);
+  }
+
+  async updateVehicle(
+    id: number,
+    data: Partial<Omit<Vehicle, "id" | "createdAt" | "updatedAt">>
+  ): Promise<Vehicle> {
+    return this.put<Vehicle>(`/vehicles/${id}`, data);
+  }
+
+  async deleteVehicle(id: number): Promise<void> {
+    return this.delete<void>(`/vehicles/${id}`);
+  }
 }
 
+// Create a singleton instance
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3000";
+export const vehiclesApi = new VehiclesApiClient(API_URL);
 
-export async function getVehicles(): Promise<Vehicle[]> {
-  const response = await fetch(`${API_URL}/vehicles`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch vehicles");
-  }
-
-  return response.json();
-}
-
-export async function getVehicle(id: string): Promise<Vehicle> {
-  const response = await fetch(`${API_URL}/vehicles/${id}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch vehicle");
-  }
-
-  return response.json();
-}
-
-export async function createVehicle(
-  data: Omit<Vehicle, "id">
-): Promise<Vehicle> {
-  const response = await fetch(`${API_URL}/vehicles`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create vehicle");
-  }
-
-  return response.json();
-}
-
-export async function updateVehicle(
-  id: string,
-  data: Partial<Vehicle>
-): Promise<Vehicle> {
-  const response = await fetch(`${API_URL}/vehicles/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update vehicle");
-  }
-
-  return response.json();
-}
-
-export async function deleteVehicle(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/vehicles/${id}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to delete vehicle");
-  }
-}
+export type {
+  Vehicle,
+  VehicleFilters,
+  VehicleListResponse,
+} from "../../types/vehicle";
