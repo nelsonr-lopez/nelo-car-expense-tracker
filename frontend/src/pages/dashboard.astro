@@ -18,6 +18,10 @@ try {
   const expensesResult = await getExpenses({ limit: 100 });
   expenses = expensesResult.expenses;
   
+  // Debug log for expenses
+  console.log('Expenses data:', expenses);
+  console.log('Expense amounts:', expenses.map(e => ({ id: e.id, amount: e.amount, type: typeof e.amount })));
+  
   // Fetch vehicles
   vehicles = await getVehicles();
   
@@ -27,17 +31,33 @@ try {
   isLoading = false;
 }
 
-// Calculate statistics
-const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+// Calculate statistics with type checking
+const totalExpenses = expenses.reduce((sum, expense) => {
+  const amount = Number(expense.amount);
+  if (isNaN(amount)) {
+    console.error('Invalid amount found:', expense);
+    return sum;
+  }
+  return sum + amount;
+}, 0);
+
+console.log('Total expenses calculated:', totalExpenses);
+
 const expensesByCategory = expenses.reduce((acc, expense) => {
   const category = expense.category;
-  acc[category] = (acc[category] || 0) + expense.amount;
+  const amount = Number(expense.amount);
+  if (!isNaN(amount)) {
+    acc[category] = (acc[category] || 0) + amount;
+  }
   return acc;
 }, {} as Record<string, number>);
 
 const expensesByVehicle = expenses.reduce((acc, expense) => {
   const vehicleId = expense.vehicleId;
-  acc[vehicleId] = (acc[vehicleId] || 0) + expense.amount;
+  const amount = Number(expense.amount);
+  if (!isNaN(amount)) {
+    acc[vehicleId] = (acc[vehicleId] || 0) + amount;
+  }
   return acc;
 }, {} as Record<string, number>);
 
