@@ -1,5 +1,5 @@
 export interface Vehicle {
-  id: string;
+  id: number;
   name: string;
   make: string;
   model: string;
@@ -19,7 +19,7 @@ export async function getVehicles(): Promise<Vehicle[]> {
   return response.json();
 }
 
-export async function getVehicle(id: string): Promise<Vehicle> {
+export async function getVehicle(id: number): Promise<Vehicle> {
   const response = await fetch(`${API_URL}/vehicles/${id}`);
 
   if (!response.ok) {
@@ -48,7 +48,7 @@ export async function createVehicle(
 }
 
 export async function updateVehicle(
-  id: string,
+  id: number,
   data: Partial<Vehicle>
 ): Promise<Vehicle> {
   const response = await fetch(`${API_URL}/vehicles/${id}`, {
@@ -66,7 +66,7 @@ export async function updateVehicle(
   return response.json();
 }
 
-export async function deleteVehicle(id: string): Promise<void> {
+export async function deleteVehicle(id: number): Promise<void> {
   const response = await fetch(`${API_URL}/vehicles/${id}`, {
     method: "DELETE",
   });

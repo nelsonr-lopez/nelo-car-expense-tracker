@@ -14,7 +14,9 @@ import type { Vehicle } from "../lib/api/vehicles";
 const { searchParams } = Astro.url;
 const page = parseInt(searchParams.get("page") || "1");
 const category = searchParams.get("category") || "";
-const vehicleId = searchParams.get("vehicleId") || "";
+const vehicleId = searchParams.get("vehicleId")
+  ? parseInt(searchParams.get("vehicleId") as string, 10)
+  : undefined;
 const search = searchParams.get("search") || "";
 const limit = 10;
 
@@ -33,7 +35,7 @@ try {
     page,
     limit,
     category: category || undefined,
-    vehicleId: vehicleId || undefined,
+    vehicleId: vehicleId,
     search: search || undefined,
   });
 
@@ -50,7 +52,15 @@ try {
   isLoading = false;
 }
 
-const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
+// Define expense categories
+const categories = [
+  "FUEL",
+  "MAINTENANCE",
+  "REPAIR",
+  "INSURANCE",
+  "TAX",
+  "OTHER",
+];
 ---
 
 <Layout title="Expenses">

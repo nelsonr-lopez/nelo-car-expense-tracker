@@ -10,8 +10,8 @@ export interface FormField {
   options?: { value: string; label: string }[];
   helperText: string;
   validation?: {
-    min?: number;
-    max?: number;
+    min?: number | string;
+    max?: number | string;
     pattern?: string;
     custom?: (value: any) => string | null;
   };
@@ -24,6 +24,11 @@ export interface FormSection {
 }
 
 export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
+  const today = new Date().toISOString().split("T")[0];
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const oneYearAgoStr = oneYearAgo.toISOString().split("T")[0];
+
   return [
     {
       title: "Basic Information",
@@ -35,7 +40,22 @@ export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
           label: "Date",
           type: "date",
           required: true,
-          helperText: "Select the date of the expense",
+          helperText: "Select the date when the expense occurred",
+          validation: {
+            min: oneYearAgoStr,
+            max: today,
+            custom: (value) => {
+              if (!value) return "Date is required";
+              const date = new Date(value);
+              if (date > new Date()) {
+                return "Date cannot be in the future";
+              }
+              if (date < oneYearAgo) {
+                return "Date cannot be more than a year ago";
+              }
+              return null;
+            },
+          },
         },
         {
           id: "vehicle",
@@ -44,8 +64,8 @@ export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
           type: "select",
           required: true,
           options: vehicles.map((vehicle) => ({
-            value: vehicle.id,
-            label: `${vehicle.name} (${vehicle.make} ${vehicle.model} ${vehicle.year})`,
+            value: vehicle.id.toString(),
+            label: `${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`,
           })),
           helperText: "Choose the vehicle this expense is for",
         },
@@ -62,12 +82,14 @@ export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
           type: "select",
           required: true,
           options: [
-            { value: "fuel", label: "Fuel" },
-            { value: "maintenance", label: "Maintenance" },
-            { value: "insurance", label: "Insurance" },
-            { value: "other", label: "Other" },
+            { value: "FUEL", label: "⛽️ Fuel" },
+            { value: "MAINTENANCE", label: "🔧 Maintenance" },
+            { value: "REPAIR", label: "🛠 Repair" },
+            { value: "INSURANCE", label: "🛡 Insurance" },
+            { value: "TAX", label: "💰 Tax" },
+            { value: "OTHER", label: "📝 Other" },
           ],
-          helperText: "Select the expense category",
+          helperText: "Select the type of expense",
         },
         {
           id: "amount",
@@ -75,12 +97,24 @@ export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
           label: "Amount",
           type: "number",
           required: true,
+          placeholder: "0.00",
           helperText: "Enter the expense amount in dollars",
           validation: {
             min: 0.01,
             custom: (value) => {
-              if (isNaN(value) || value <= 0) {
+              if (!value) return "Amount is required";
+              const amount = parseFloat(value);
+              if (isNaN(amount) || amount <= 0) {
                 return "Amount must be a positive number";
+              }
+              if (amount > 1000000) {
+                return "Amount seems too high. Please verify.";
+              }
+              if (amount < 0.01) {
+                return "Amount must be at least $0.01";
+              }
+              if (!/^\d+(\.\d{0,2})?$/.test(value)) {
+                return "Amount can only have up to 2 decimal places";
               }
               return null;
             },
@@ -100,6 +134,14 @@ export function getExpenseFormConfig(vehicles: Vehicle[]): FormSection[] {
           placeholder: "Add any additional details about this expense...",
           required: false,
           helperText: "Optional: Add any relevant notes about this expense",
+          validation: {
+            custom: (value) => {
+              if (value && value.length > 500) {
+                return "Note cannot be longer than 500 characters";
+              }
+              return null;
+            },
+          },
         },
       ],
     },

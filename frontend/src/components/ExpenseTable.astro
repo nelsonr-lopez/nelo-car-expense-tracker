@@ -1,9 +1,9 @@
 ---
 interface Props {
   expenses: Array<{
-    id: string;
+    id: number;
     date: string;
-    vehicleId: string;
+    vehicleId: number;
     category: string;
     amount: number;
     note: string;
@@ -11,6 +11,21 @@ interface Props {
 }
 
 const { expenses } = Astro.props;
+
+// Format date function
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// Format category function
+function formatCategory(category: string): string {
+  return category.charAt(0) + category.slice(1).toLowerCase();
+}
 ---
 
 <div class="rounded-lg border">
@@ -30,15 +45,18 @@ const { expenses } = Astro.props;
         {
           expenses.map((expense) => (
             <tr class="border-b">
-              <td class="p-4">{expense.date}</td>
+              <td class="p-4">{formatDate(expense.date)}</td>
               <td class="p-4">Vehicle #{expense.vehicleId}</td>
-              <td class="p-4">{expense.category}</td>
+              <td class="p-4">{formatCategory(expense.category)}</td>
               <td class="p-4">${expense.amount.toFixed(2)}</td>
-              <td class="p-4">{expense.note}</td>
+              <td class="p-4">{expense.note || "-"}</td>
               <td class="p-4 text-right">
-                <button class="text-sm text-muted-foreground hover:text-foreground">
+                <a
+                  href={`/edit-expense/${expense.id}`}
+                  class="text-sm text-muted-foreground hover:text-foreground"
+                >
                   Edit
-                </button>
+                </a>
               </td>
             </tr>
           ))
@@ -47,4 +65,3 @@ const { expenses } = Astro.props;
     </table>
   </div>
 </div>
-

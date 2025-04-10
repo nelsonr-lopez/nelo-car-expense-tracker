@@ -1,48 +1,77 @@
 ---
 import type { FormField as FormFieldType } from "../lib/config/expense-form";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface Props {
   field: FormFieldType;
   error?: string;
+  isLoading?: boolean;
 }
 
-const { field, error } = Astro.props;
+const { field, error, isLoading = false } = Astro.props;
+
+// Define valid input types
+type InputType =
+  | "text"
+  | "date"
+  | "email"
+  | "password"
+  | "tel"
+  | "url"
+  | "number";
 ---
 
 <div class="space-y-2">
-  <label for={field.id} class="text-sm font-medium">
+  <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
     {field.label}
-    {field.required && <span class="text-destructive">*</span>}
-  </label>
+    {field.required && <span class="text-destructive ml-1">*</span>}
+  </Label>
 
   {
-    field.type === "select" ? (
-      <select
-        id={field.id}
-        name={field.name}
-        required={field.required}
-        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-      >
-        <option value="">Select {field.label.toLowerCase()}</option>
-        {field.options?.map((option) => (
-          <option value={option.value}>{option.label}</option>
-        ))}
-      </select>
+    isLoading ? (
+      <div class="animate-pulse space-y-2">
+        <div class="h-10 w-full rounded-md bg-muted" />
+        {field.helperText && <div class="h-4 w-3/4 rounded bg-muted" />}
+      </div>
+    ) : field.type === "select" ? (
+      <div class="select-wrapper" data-field-name={field.name}>
+        <select
+          id={field.id}
+          name={field.name}
+          required={field.required}
+          class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <option value="">Select {field.label.toLowerCase()}</option>
+          {field.options?.map((option) => (
+            <option value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </div>
     ) : field.type === "textarea" ? (
-      <textarea
+      <Textarea
         id={field.id}
         name={field.name}
-        rows="3"
+        rows={3}
         required={field.required}
         placeholder={field.placeholder}
-        class="w-full rounded-md border border-input bg-background px-3 py-2"
       />
     ) : field.type === "number" ? (
       <div class="relative">
         {field.name === "amount" && (
-          <span class="absolute left-3 top-2.5 text-muted-foreground">$</span>
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <span class="text-muted-foreground sm:text-sm">$</span>
+          </div>
         )}
-        <input
+        <Input
           type="number"
           id={field.id}
           name={field.name}
@@ -50,30 +79,55 @@ const { field, error } = Astro.props;
           min={field.validation?.min}
           max={field.validation?.max}
           step="0.01"
-          class={`h-10 w-full rounded-md border border-input bg-background px-3 py-2 ${
-            field.name === "amount" ? "pl-8" : ""
-          }`}
+          className={field.name === "amount" ? "pl-8" : ""}
+          placeholder={field.placeholder}
         />
       </div>
     ) : (
-      <input
-        type={
-          field.type as "text" | "date" | "email" | "password" | "tel" | "url"
-        }
+      <Input
+        type={field.type}
         id={field.id}
         name={field.name}
         required={field.required}
         placeholder={field.placeholder}
-        class="h-10 w-full rounded-md border border-input bg-background px-3 py-2"
       />
     )
   }
 
   {
-    error ? (
-      <p class="text-xs text-destructive">{error}</p>
-    ) : (
-      <p class="text-xs text-muted-foreground">{field.helperText}</p>
+    !isLoading && field.helperText && (
+      <p class="text-sm text-muted-foreground">{field.helperText}</p>
     )
   }
+  {!isLoading && error && <p class="text-sm text-destructive">{error}</p>}
 </div>
+
+<script>
+  // Initialize select elements
+  document.addEventListener("DOMContentLoaded", () => {
+    const selectWrappers = document.querySelectorAll(".select-wrapper");
+    selectWrappers.forEach((wrapper) => {
+      const select = wrapper.querySelector("select");
+      if (select) {
+        select.addEventListener("change", (e) => {
+          const target = e.target as HTMLSelectElement;
+          wrapper.setAttribute("data-value", target.value);
+        });
+      }
+    });
+  });
+</script>
+
+<style>
+  .select-wrapper {
+    position: relative;
+  }
+  .select-wrapper select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+</style>

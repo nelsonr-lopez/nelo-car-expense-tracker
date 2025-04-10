@@ -1,16 +1,18 @@
 export interface Expense {
-  id: string;
+  id: number;
   date: string;
-  vehicleId: string;
+  vehicleId: number;
   category: string;
   amount: number;
   note: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ExpenseFilters {
   search?: string;
   category?: string;
-  vehicleId?: string;
+  vehicleId?: number;
   page?: number;
   limit?: number;
 }
@@ -26,7 +28,8 @@ export async function getExpenses(filters: ExpenseFilters = {}): Promise<{
 
   if (filters.search) searchParams.set("search", filters.search);
   if (filters.category) searchParams.set("category", filters.category);
-  if (filters.vehicleId) searchParams.set("vehicleId", filters.vehicleId);
+  if (filters.vehicleId)
+    searchParams.set("vehicleId", filters.vehicleId.toString());
   if (filters.page) searchParams.set("page", filters.page.toString());
   if (filters.limit) searchParams.set("limit", filters.limit.toString());
 
@@ -41,8 +44,18 @@ export async function getExpenses(filters: ExpenseFilters = {}): Promise<{
   return response.json();
 }
 
+export async function getExpense(id: number): Promise<Expense> {
+  const response = await fetch(`${API_URL}/expenses/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch expense");
+  }
+
+  return response.json();
+}
+
 export async function updateExpense(
-  id: string,
+  id: number,
   data: Partial<Expense>
 ): Promise<Expense> {
   const response = await fetch(`${API_URL}/expenses/${id}`, {
@@ -61,7 +74,7 @@ export async function updateExpense(
 }
 
 export async function createExpense(
-  data: Omit<Expense, "id">
+  data: Omit<Expense, "id" | "createdAt" | "updatedAt">
 ): Promise<Expense> {
   const response = await fetch(`${API_URL}/expenses`, {
     method: "POST",
@@ -78,7 +91,7 @@ export async function createExpense(
   return response.json();
 }
 
-export async function deleteExpense(id: string): Promise<void> {
+export async function deleteExpense(id: number): Promise<void> {
   const response = await fetch(`${API_URL}/expenses/${id}`, {
     method: "DELETE",
   });
