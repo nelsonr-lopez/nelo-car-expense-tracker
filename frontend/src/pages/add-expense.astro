@@ -1,8 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getVehicles } from "../lib/api/vehicles";
-import type { Vehicle } from "../lib/api/vehicles";
+import { vehiclesApi } from "../lib/api/vehicles";
+import type { Vehicle } from "../types/vehicle";
+import type { ExpenseCategory } from "../types/expense";
 import FormField from "../components/FormField.astro";
+import ErrorMessage from "../components/ErrorMessage.astro";
+import { handleApiError } from "../lib/error-handling";
 import { getExpenseFormConfig } from "../lib/config/expense-form";
 
 // Initialize variables
@@ -13,274 +16,174 @@ let formSections: ReturnType<typeof getExpenseFormConfig> = [];
 
 // Fetch vehicles from API
 try {
-  vehicles = await getVehicles();
+  vehicles = await vehiclesApi.getVehicles();
   formSections = getExpenseFormConfig(vehicles);
   isLoading = false;
 } catch (e) {
-  error = e instanceof Error ? e.message : "An unknown error occurred";
+  const apiError = handleApiError(e);
+  error = apiError.message;
   isLoading = false;
+  console.error("Error fetching vehicles:", apiError);
 }
 
-const categories = ["Fuel", "Maintenance", "Insurance", "Other"];
+const categories: ExpenseCategory[] = [
+  "FUEL",
+  "MAINTENANCE",
+  "REPAIR",
+  "INSURANCE",
+  "TAX",
+  "OTHER",
+];
 ---
 
 <Layout title="Add Expense">
   <div class="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">
-          Add Expense
-        </h1>
-        <p class="mt-2 text-sm text-gray-600">
+        <h1 class="text-3xl font-bold tracking-tight">Add Expense</h1>
+        <p class="mt-2 text-sm text-muted-foreground">
           Fill out the form below to add a new expense record.
         </p>
       </div>
       <a
         href="/expenses"
-        class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        class="inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-muted"
       >
         Back to Expenses
       </a>
     </div>
 
-    <div class="overflow-hidden rounded-lg bg-white shadow">
-      <div class="px-4 py-5 sm:p-6">
-        {
-          error ? (
-            <div class="rounded-md bg-destructive/10 p-4">
-              <div class="flex">
-                <div class="flex-shrink-0">
-                  <svg
-                    class="h-5 w-5 text-destructive"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <h3 class="text-sm font-medium text-destructive">
-                    Error loading form
-                  </h3>
-                  <div class="mt-2 text-sm text-destructive/90">
-                    <p>{error}</p>
-                  </div>
-                  <div class="mt-4">
-                    <button
-                      type="button"
-                      onclick="window.location.reload()"
-                      class="rounded bg-destructive px-2 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-destructive/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
-                    >
-                      Try again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <form id="expense-form" class="space-y-8">
-              <div
-                id="form-error"
-                class="hidden rounded-md bg-destructive/10 p-4"
-              >
-                <div class="flex">
-                  <div class="flex-shrink-0">
-                    <svg
-                      class="h-5 w-5 text-destructive"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div class="ml-3">
-                    <h3 class="text-sm font-medium text-destructive">Error</h3>
-                    <div class="mt-2 text-sm text-destructive/90">
-                      <p id="error-message" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+    {
+      isLoading ? (
+        <div class="py-12 text-center">
+          <p class="text-muted-foreground">Loading form...</p>
+        </div>
+      ) : error ? (
+        <ErrorMessage message={error} retry={true} />
+      ) : (
+        <form id="expense-form" class="space-y-8">
+          <div class="space-y-6">
+            <FormField
+              label="Date"
+              name="date"
+              type="date"
+              required={true}
+              value={new Date().toISOString().split("T")[0]}
+            />
 
-              {formSections.map((section) => (
-                <div class="space-y-6 border-b border-gray-200 pb-8 last:border-0 last:pb-0">
-                  <div>
-                    <h2 class="text-lg font-medium leading-6 text-gray-900">
-                      {section.title}
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500">
-                      {section.description}
-                    </p>
-                  </div>
-
-                  <div class="grid gap-6 sm:grid-cols-2">
-                    {section.fields.map((field) => (
-                      <FormField field={field} isLoading={isLoading} />
-                    ))}
-                  </div>
-                </div>
+            <FormField
+              label="Vehicle"
+              name="vehicleId"
+              type="select"
+              required={true}
+            >
+              <option value="">Select a vehicle</option>
+              {vehicles.map((vehicle) => (
+                <option value={vehicle.id}>
+                  {vehicle.year} {vehicle.make} {vehicle.model} (
+                  {vehicle.licensePlate})
+                </option>
               ))}
+            </FormField>
 
-              <div class="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  id="reset-button"
-                  class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  Reset
-                </button>
-                <button
-                  type="submit"
-                  id="submit-button"
-                  class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  <span id="submit-text">Add Expense</span>
-                  <span
-                    id="submit-spinner"
-                    class="ml-2 hidden h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-                  />
-                </button>
-              </div>
-            </form>
-          )
-        }
-      </div>
-    </div>
+            <FormField
+              label="Category"
+              name="category"
+              type="select"
+              required={true}
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option value={category}>{category}</option>
+              ))}
+            </FormField>
+
+            <FormField
+              label="Amount"
+              name="amount"
+              type="number"
+              required={true}
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+
+            <FormField
+              label="Note"
+              name="note"
+              type="textarea"
+              placeholder="Add any additional details..."
+            />
+          </div>
+
+          <div class="flex justify-end space-x-4">
+            <button
+              type="button"
+              class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow-sm hover:bg-destructive/90"
+              onclick="window.location.href='/expenses'"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              Save Expense
+            </button>
+          </div>
+        </form>
+      )
+    }
   </div>
+
+  <script>
+    import { expensesApi } from "../lib/api/expenses";
+    import { handleApiError, getValidationErrors } from "../lib/error-handling";
+    import type { ExpenseCategory } from "../types/expense";
+
+    const form = document.getElementById("expense-form");
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        try {
+          const formData = new FormData(form as HTMLFormElement);
+          const data = {
+            date: formData.get("date") as string,
+            vehicleId: parseInt(formData.get("vehicleId") as string, 10),
+            category: formData.get("category") as ExpenseCategory,
+            amount: parseFloat(formData.get("amount") as string),
+            note: formData.get("note") as string,
+          };
+
+          await expensesApi.createExpense(data);
+          window.location.href = "/expenses";
+        } catch (error) {
+          const apiError = handleApiError(error);
+          const validationErrors = getValidationErrors(apiError);
+
+          if (validationErrors) {
+            // Handle validation errors
+            Object.entries(validationErrors).forEach(([field, errors]) => {
+              const input = form.querySelector(`[name="${field}"]`);
+              if (input) {
+                input.classList.add("border-destructive");
+                const errorDiv = document.createElement("div");
+                errorDiv.className = "text-sm text-destructive mt-1";
+                errorDiv.textContent = errors[0];
+                input.parentNode?.appendChild(errorDiv);
+              }
+            });
+          } else {
+            // Show general error message
+            const errorDiv = document.createElement("div");
+            errorDiv.className =
+              "rounded-md bg-destructive/15 p-4 text-destructive mb-6";
+            errorDiv.textContent = apiError.message;
+            form.insertBefore(errorDiv, form.firstChild);
+          }
+        }
+      });
+    }
+  </script>
 </Layout>
-
-<script>
-  import type { ExpenseCategory } from "@/types/expense";
-  import { createExpense } from "../lib/api/expenses";
-
-  // Wait for the DOM to be fully loaded
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("expense-form") as HTMLFormElement;
-    const submitButton = document.getElementById(
-      "submit-button"
-    ) as HTMLButtonElement;
-    const submitText = document.getElementById(
-      "submit-text"
-    ) as HTMLSpanElement;
-    const submitSpinner = document.getElementById(
-      "submit-spinner"
-    ) as HTMLSpanElement;
-    const resetButton = document.getElementById(
-      "reset-button"
-    ) as HTMLButtonElement;
-
-    // Set default date to today
-    const dateInput = document.getElementById("date") as HTMLInputElement;
-    if (dateInput) {
-      const today = new Date().toISOString().split("T")[0];
-      dateInput.value = today;
-    }
-
-    // Form validation
-    function validateForm(formData: FormData): string | null {
-      const date = formData.get("date") as string;
-      const vehicleId = formData.get("vehicleId") as string;
-      const category = formData.get("category") as string;
-      const amount = formData.get("amount") as string;
-
-      if (!date) return "Date is required";
-      if (!vehicleId) return "Vehicle is required";
-      if (!category) return "Category is required";
-      if (!amount) return "Amount is required";
-
-      const amountNum = parseFloat(amount);
-      if (isNaN(amountNum) || amountNum <= 0) {
-        return "Amount must be a positive number";
-      }
-
-      return null;
-    }
-
-    // Show error message
-    function showError(message: string) {
-      const errorMessage = document.getElementById(
-        "error-message"
-      ) as HTMLParagraphElement;
-      errorMessage.textContent = message;
-      const formError = document.getElementById("form-error") as HTMLDivElement;
-      formError.classList.remove("hidden");
-      formError.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    // Hide error message
-    function hideError() {
-      const formError = document.getElementById("form-error") as HTMLDivElement;
-      formError.classList.add("hidden");
-    }
-
-    // Set loading state
-    function setLoading(isLoading: boolean) {
-      if (isLoading) {
-        submitButton.disabled = true;
-        submitText.textContent = "Adding...";
-        submitSpinner.classList.remove("hidden");
-      } else {
-        submitButton.disabled = false;
-        submitText.textContent = "Add Expense";
-        submitSpinner.classList.add("hidden");
-      }
-    }
-
-    // Reset form
-    function resetForm() {
-      form.reset();
-      hideError();
-    }
-
-    // Form submission
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideError();
-
-      const formData = new FormData(form);
-
-      // Validate form
-      const validationError = validateForm(formData);
-      if (validationError) {
-        showError(validationError);
-        return;
-      }
-
-      const date = formData.get("date") as string;
-      const vehicleId = parseInt(formData.get("vehicleId") as string, 10);
-      const category = formData.get("category") as ExpenseCategory;
-      const amount = parseFloat(formData.get("amount") as string);
-      const note = formData.get("note") as string;
-
-      try {
-        setLoading(true);
-
-        await createExpense({
-          date,
-          vehicleId,
-          category,
-          amount,
-          note,
-        });
-
-        // Show success message and redirect
-        window.location.href = "/expenses?success=true";
-      } catch (error) {
-        console.error("Failed to create expense:", error);
-        showError("Failed to create expense. Please try again.");
-        setLoading(false);
-      }
-    });
-
-    // Reset button
-    resetButton?.addEventListener("click", resetForm);
-  });
-</script>

@@ -1,36 +1,59 @@
 ---
 interface Props {
   message: string;
+  code?: string;
+  details?: Record<string, string[]>;
   retry?: boolean;
 }
 
-const { message, retry = false } = Astro.props;
+const { message, code, details, retry = false } = Astro.props;
 ---
 
-<div class="rounded-md bg-destructive/15 p-4 text-destructive">
+<div class="rounded-md bg-destructive/15 p-4">
   <div class="flex">
     <div class="flex-shrink-0">
-      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <svg
+        class="h-5 w-5 text-destructive"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        aria-hidden="true"
+      >
         <path
           fill-rule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
           clip-rule="evenodd"></path>
       </svg>
     </div>
     <div class="ml-3">
-      <p class="text-sm font-medium">{message}</p>
+      <h3 class="text-sm font-medium text-destructive">Error</h3>
+      <div class="mt-2 text-sm text-destructive">
+        <p>{message}</p>
+        {code && <p class="mt-1 text-xs">Error code: {code}</p>}
+        {
+          details && (
+            <ul class="mt-2 list-disc pl-5 space-y-1">
+              {Object.entries(details).map(([field, errors]) => (
+                <li>
+                  <span class="font-medium">{field}:</span> {errors.join(", ")}
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+      {
+        retry && (
+          <div class="mt-4">
+            <button
+              type="button"
+              class="inline-flex items-center rounded-md bg-destructive px-3 py-2 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-destructive/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
+              onclick="window.location.reload()"
+            >
+              Try again
+            </button>
+          </div>
+        )
+      }
     </div>
   </div>
-  {
-    retry && (
-      <div class="mt-4">
-        <button
-          id="retry-button"
-          class="inline-flex items-center rounded-md bg-destructive px-3 py-2 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-destructive/90"
-        >
-          Try Again
-        </button>
-      </div>
-    )
-  }
 </div>

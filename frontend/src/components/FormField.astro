@@ -12,12 +12,28 @@ import {
 } from "./ui/select";
 
 interface Props {
-  field: FormFieldType;
-  error?: string;
-  isLoading?: boolean;
+  label: string;
+  name: string;
+  type: "text" | "number" | "date" | "select" | "textarea";
+  required?: boolean;
+  value?: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  placeholder?: string;
 }
 
-const { field, error, isLoading = false } = Astro.props;
+const {
+  label,
+  name,
+  type,
+  required = false,
+  value = "",
+  min,
+  max,
+  step,
+  placeholder,
+} = Astro.props;
 
 // Define valid input types
 type InputType =
@@ -31,75 +47,44 @@ type InputType =
 ---
 
 <div class="space-y-2">
-  <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-    {field.label}
-    {field.required && <span class="text-destructive ml-1">*</span>}
-  </Label>
+  <label for={name} class="block text-sm font-medium text-foreground">
+    {label}
+    {required && <span class="text-destructive">*</span>}
+  </label>
 
   {
-    isLoading ? (
-      <div class="animate-pulse space-y-2">
-        <div class="h-10 w-full rounded-md bg-muted" />
-        {field.helperText && <div class="h-4 w-3/4 rounded bg-muted" />}
-      </div>
-    ) : field.type === "select" ? (
-      <div class="select-wrapper" data-field-name={field.name}>
-        <select
-          id={field.id}
-          name={field.name}
-          required={field.required}
-          class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <option value="">Select {field.label.toLowerCase()}</option>
-          {field.options?.map((option) => (
-            <option value={option.value}>{option.label}</option>
-          ))}
-        </select>
-      </div>
-    ) : field.type === "textarea" ? (
-      <Textarea
-        id={field.id}
-        name={field.name}
-        rows={3}
-        required={field.required}
-        placeholder={field.placeholder}
+    type === "textarea" ? (
+      <textarea
+        id={name}
+        name={name}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        required={required}
+        placeholder={placeholder}
       />
-    ) : field.type === "number" ? (
-      <div class="relative">
-        {field.name === "amount" && (
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <span class="text-muted-foreground sm:text-sm">$</span>
-          </div>
-        )}
-        <Input
-          type="number"
-          id={field.id}
-          name={field.name}
-          required={field.required}
-          min={field.validation?.min}
-          max={field.validation?.max}
-          step="0.01"
-          className={field.name === "amount" ? "pl-8" : ""}
-          placeholder={field.placeholder}
-        />
-      </div>
+    ) : type === "select" ? (
+      <select
+        id={name}
+        name={name}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        required={required}
+      >
+        <slot />
+      </select>
     ) : (
-      <Input
-        type={field.type}
-        id={field.id}
-        name={field.name}
-        required={field.required}
-        placeholder={field.placeholder}
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        required={required}
+        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       />
     )
   }
-
-  {
-    !isLoading && field.helperText && (
-      <p class="text-sm text-muted-foreground">{field.helperText}</p>
-    )
-  }
-  {!isLoading && error && <p class="text-sm text-destructive">{error}</p>}
 </div>
 
 <script>

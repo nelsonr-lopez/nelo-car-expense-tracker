@@ -3,8 +3,9 @@ import Layout from "../layouts/Layout.astro";
 import ExpenseTable from "../components/ExpenseTable.astro";
 import Pagination from "../components/Pagination.astro";
 import ExpenseFilters from "../components/ExpenseFilters.astro";
-import { getExpenses } from "../lib/api/expenses";
-import { getVehicles } from "../lib/api/vehicles";
+import { expensesApi } from "../lib/api/expenses";
+import { vehiclesApi } from "../lib/api/vehicles";
+import { handleApiError } from "../lib/error-handling";
 import type {
   Expense,
   ExpenseCategory,
@@ -34,14 +35,14 @@ let error: string | null = null;
 try {
   // Fetch data
   const [expensesData, vehiclesData] = await Promise.all([
-    getExpenses({
+    expensesApi.getExpenses({
       page,
       limit,
       category,
       vehicleId,
       search,
     }),
-    getVehicles(),
+    vehiclesApi.getVehicles(),
   ]);
 
   expensesResult = expensesData;

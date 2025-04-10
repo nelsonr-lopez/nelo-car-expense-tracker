@@ -3,10 +3,10 @@ import Layout from "../layouts/Layout.astro";
 import ExpenseTable from "../components/ExpenseTable.astro";
 import ExpenseFilters from "../components/ExpenseFilters.astro";
 import Pagination from "../components/Pagination.astro";
-import LoadingSpinner from "../components/LoadingSpinner.astro";
 import ErrorMessage from "../components/ErrorMessage.astro";
-import { getExpenses } from "../lib/api/expenses";
-import { getVehicles } from "../lib/api/vehicles";
+import { expensesApi } from "../lib/api/expenses";
+import { vehiclesApi } from "../lib/api/vehicles";
+import { handleApiError } from "../lib/error-handling";
 import type { Expense, ExpenseCategory } from "../types/expense";
 import type { Vehicle } from "../types/vehicle";
 
@@ -24,32 +24,35 @@ const limit = 10;
 let expenses: Expense[] = [];
 let total = 0;
 let totalPages = 1;
+let vehicles: Vehicle[] = [];
 let error: string | null = null;
 let isLoading = true;
-let vehicles: Vehicle[] = [];
 
 // Fetch data from API
 try {
-  // Fetch expenses
-  const expensesResult = await getExpenses({
-    page,
-    limit,
-    category: category || undefined,
-    vehicleId: vehicleId,
-    search: search || undefined,
-  });
+  // Fetch data
+  const [expensesResult, vehiclesData] = await Promise.all([
+    expensesApi.getExpenses({
+      page,
+      limit,
+      category: category || undefined,
+      vehicleId,
+      search: search || undefined,
+    }),
+    vehiclesApi.getVehicles(),
+  ]);
 
   expenses = expensesResult.expenses;
   total = expensesResult.total;
   totalPages = expensesResult.totalPages;
-
-  // Fetch vehicles
-  vehicles = await getVehicles();
+  vehicles = vehiclesData;
 
   isLoading = false;
 } catch (e) {
-  error = e instanceof Error ? e.message : "An unknown error occurred";
+  const apiError = handleApiError(e);
+  error = apiError.message;
   isLoading = false;
+  console.error("Error fetching expenses data:", apiError);
 }
 
 // Define expense categories
@@ -75,44 +78,43 @@ const categories: ExpenseCategory[] = [
       </a>
     </div>
 
-    <div class="rounded-lg border">
-      <ExpenseFilters
-        categories={categories}
-        vehicles={vehicles}
-        initialSearch={search}
-        initialCategory={category}
-        initialVehicleId={vehicleId}
-      />
-
-      {
-        isLoading ? (
-          <div class="py-12">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : error ? (
-          <div class="p-4">
-            <ErrorMessage message={error} retry={true} />
-          </div>
-        ) : expenses.length === 0 ? (
-          <div class="p-8 text-center text-muted-foreground">
-            <p>
-              No expenses found. Try adjusting your filters or add a new
-              expense.
-            </p>
-          </div>
-        ) : (
-          <>
-            <ExpenseTable expenses={expenses} vehicles={vehicles} />
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              totalItems={total}
-              itemsPerPage={limit}
-            />
-          </>
-        )
-      }
-    </div>
+    {
+      isLoading ? (
+        <div class="py-12 text-center">
+          <p class="text-muted-foreground">Loading expenses...</p>
+        </div>
+      ) : error ? (
+        <ErrorMessage message={error} retry={true} />
+      ) : (
+        <div class="rounded-lg border">
+          <ExpenseFilters
+            categories={categories}
+            vehicles={vehicles}
+            initialSearch={search}
+            initialCategory={category}
+            initialVehicleId={vehicleId}
+          />
+          {expenses.length === 0 ? (
+            <div class="p-8 text-center text-muted-foreground">
+              <p>
+                No expenses found. Try adjusting your filters or add a new
+                expense.
+              </p>
+            </div>
+          ) : (
+            <>
+              <ExpenseTable expenses={expenses} vehicles={vehicles} />
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                itemsPerPage={limit}
+              />
+            </>
+          )}
+        </div>
+      )
+    }
   </div>
 </Layout>
 

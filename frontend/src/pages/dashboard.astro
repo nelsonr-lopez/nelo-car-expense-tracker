@@ -1,10 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getExpenses } from "../lib/api/expenses";
-import { getVehicles } from "../lib/api/vehicles";
+import { expensesApi } from "../lib/api/expenses";
+import { vehiclesApi } from "../lib/api/vehicles";
 import type { Expense } from "../types/expense";
 import type { Vehicle } from "../types/vehicle";
 import { formatCurrency, formatVehicleLabel } from "../lib/format";
+import ErrorMessage from "../components/ErrorMessage.astro";
+import { handleApiError } from "../lib/error-handling";
 
 // Initialize variables
 let expenses: Expense[] = [];
@@ -15,20 +17,20 @@ let isLoading = true;
 // Fetch data from API
 try {
   // Fetch all expenses for the dashboard
-  const expensesResult = await getExpenses({ limit: 100 });
+  const [expensesResult, vehiclesData] = await Promise.all([
+    expensesApi.getExpenses({ limit: 100 }),
+    vehiclesApi.getVehicles()
+  ]);
+  
   expenses = expensesResult.expenses;
-  
-  // Debug log for expenses
-  console.log('Expenses data:', expenses);
-  console.log('Expense amounts:', expenses.map(e => ({ id: e.id, amount: e.amount, type: typeof e.amount })));
-  
-  // Fetch vehicles
-  vehicles = await getVehicles();
+  vehicles = vehiclesData;
   
   isLoading = false;
 } catch (e) {
-  error = e instanceof Error ? e.message : "An unknown error occurred";
+  const apiError = handleApiError(e);
+  error = apiError.message;
   isLoading = false;
+  console.error('Error fetching dashboard data:', apiError);
 }
 
 // Calculate statistics with type checking
@@ -85,11 +87,10 @@ const vehicleNames = vehicles.reduce((acc, vehicle) => {
         <p class="text-muted-foreground">Loading dashboard data...</p>
       </div>
     ) : error ? (
-      <div class="p-4">
-        <div class="rounded-md bg-destructive/15 p-4 text-destructive">
-          <p>{error}</p>
-        </div>
-      </div>
+      <ErrorMessage 
+        message={error}
+        retry={true}
+      />
     ) : (
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <!-- Total Expenses Card -->
