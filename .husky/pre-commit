@@ -5,10 +5,10 @@
 BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 
 # Run lint-staged for all branches
-npx lint-staged
+npx lint-staged || { echo "Linting failed. Commit aborted."; exit 1; }
 
 # Run tests if we're on the main branch
 if [ "$BRANCH_NAME" = "main" ]; then
   echo "Running tests before commit on main branch..."
-  npm test
+  npm test || { echo "Tests failed. Commit aborted."; exit 1; }
 fi 

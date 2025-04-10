@@ -3,4 +3,4 @@
 
 # Run tests for all branches
 echo "Running tests before push..."
-npm test 
+npm test || { echo "Tests failed. Push aborted."; exit 1; } 

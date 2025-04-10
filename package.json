@@ -6,7 +6,7 @@
     "prepare": "husky install",
     "test": "npm run test:api && npm run test:frontend",
     "test:api": "cd api && npm test",
-    "test:frontend": "cd frontend && npm test",
+    "test:frontend": "cd frontend && npm test -- --run",
     "test:api:watch": "cd api && npm run test:watch",
     "test:frontend:watch": "cd frontend && npm test -- --watch",
     "lint": "npm run lint:api && npm run lint:frontend",
